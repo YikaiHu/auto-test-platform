@@ -23,15 +23,6 @@ import IMAGE_SL_Amazon_WAF from "assets/images/type/amazon_waf.svg";
 import IMAGE_SL_Amazon_VPCLogs from "assets/images/type/amazon_vpclogs.svg";
 import IMAGE_SL_Amazon_Config from "assets/images/type/amazon_config.svg";
 
-import {
-  AlarmType,
-  CompressionType,
-  LogConfFilterCondition,
-  LogType,
-  MultiLineLogParser,
-  ProtocolType,
-  SyslogParser,
-} from "API";
 import { OptionType } from "components/AutoComplete/autoComplete";
 export const INVALID = "invalid";
 export const AUTO_REFRESH_INT = 8000;
@@ -392,137 +383,7 @@ export const RDS_TYPE_LIST = [
   { name: "RDS MySQL", value: RDSTypes.MySQL },
 ];
 
-export type AlarmParamType = {
-  key: AlarmType;
-  name: string;
-  value: boolean | string;
-  isChecked: boolean;
-  isNumber?: boolean;
-  isInvalid?: boolean;
-};
 
-export const FB_TYPE_LIST = [
-  { name: "null", value: "null" },
-  { name: "boolean", value: "boolean" },
-  { name: "byte", value: "byte" },
-  { name: "short", value: "short" },
-  { name: "integer", value: "integer" },
-  { name: "long", value: "long" },
-  { name: "double", value: "double" },
-  { name: "float", value: "float" },
-  { name: "half_float", value: "half_float" },
-  { name: "scaled_float", value: "scaled_float" },
-  { name: "keyword", value: "keyword" },
-  { name: "text", value: "text" },
-  { name: "binary", value: "binary" },
-  { name: "date", value: "date" },
-  { name: "ip", value: "ip" },
-  { name: "string", value: "string" },
-];
-
-export const LOG_CONFIG_TYPE_LIST = [
-  { name: "resource:config.type.json", value: LogType.JSON },
-  { name: "resource:config.type.apache", value: LogType.Apache },
-  { name: "resource:config.type.nginx", value: LogType.Nginx },
-  { name: "resource:config.type.syslog", value: LogType.Syslog },
-  { name: "resource:config.type.singleLine", value: LogType.SingleLineText },
-  { name: "resource:config.type.multiLine", value: LogType.MultiLineText },
-];
-
-export const SYSLOG_CONFIG_TYPE_LIST = [
-  { name: "resource:config.type.syslog", value: LogType.Syslog },
-  { name: "resource:config.type.json", value: LogType.JSON },
-  { name: "resource:config.type.singleLine", value: LogType.SingleLineText },
-];
-
-export const MULTI_LINE_LOG_PARSER_LIST = [
-  { name: "Java-Spring Boot", value: MultiLineLogParser.JAVA_SPRING_BOOT },
-  { name: "Custom", value: MultiLineLogParser.CUSTOM },
-];
-
-export const SYS_LOG_PARSER_LIST = [
-  { name: "RFC5424", value: SyslogParser.RFC5424 },
-  { name: "RFC3164", value: SyslogParser.RFC3164 },
-  { name: "Custom", value: SyslogParser.CUSTOM },
-];
-
-export const domainAlramList: AlarmParamType[] = [
-  {
-    key: AlarmType.CLUSTER_RED,
-    name: "cluster:detail.alarms.list.clusterRed",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.CLUSTER_YELLOW,
-    name: "cluster:detail.alarms.list.clusterYellow",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.FREE_STORAGE_SPACE,
-    name: "cluster:detail.alarms.list.freeStorageSpace",
-    value: "20",
-    isChecked: false,
-    isNumber: true,
-  },
-  {
-    key: AlarmType.WRITE_BLOCKED,
-    name: "cluster:detail.alarms.list.writeBlocked",
-    value: "1",
-    isChecked: false,
-    isNumber: true,
-  },
-  {
-    key: AlarmType.NODE_UNREACHABLE,
-    name: "cluster:detail.alarms.list.nodeUnreachable",
-    value: "3",
-    isChecked: false,
-    isNumber: true,
-  },
-  {
-    key: AlarmType.SNAPSHOT_FAILED,
-    name: "cluster:detail.alarms.list.snapshotFailed",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.CPU_UTILIZATION,
-    name: "cluster:detail.alarms.list.cpuUtilization",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.JVM_MEMORY_PRESSURE,
-    name: "cluster:detail.alarms.list.jvmMemory",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.MASTER_CPU_UTILIZATION,
-    name: "cluster:detail.alarms.list.masterCPU",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.MASTER_JVM_MEMORY_PRESSURE,
-    name: "cluster:detail.alarms.list.masterJVM",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.KMS_KEY_DISABLED,
-    name: "cluster:detail.alarms.list.kmsKeyDisabled",
-    value: "false",
-    isChecked: false,
-  },
-  {
-    key: AlarmType.KMS_KEY_INACCESSIBLE,
-    name: "cluster:detail.alarms.list.kmsKeyInAccess",
-    value: "false",
-    isChecked: false,
-  },
-];
 
 export const S3_FILE_TYPE_LIST = [
   { name: "Json", value: "json" },
@@ -616,27 +477,6 @@ export const AMPLIFY_ZH_DICT = {
   },
 };
 
-export const COMPRESS_TYPE = [
-  {
-    name: "None",
-    value: CompressionType.NONE,
-  },
-  {
-    name: "Gzip",
-    value: CompressionType.GZIP,
-  },
-];
-
-export const FILTER_CONDITION_LIST = [
-  {
-    name: "resource:config.filter.include",
-    value: LogConfFilterCondition.Include,
-  },
-  {
-    name: "resource:config.filter.exclude",
-    value: LogConfFilterCondition.Exclude,
-  },
-];
 
 export const generateTimeZoneList = () => {
   const timezoneOptionList: OptionType[] = [];
@@ -655,16 +495,6 @@ export const generateTimeZoneList = () => {
   return timezoneOptionList;
 };
 
-export const PROTOCOL_LIST = [
-  {
-    name: "UDP",
-    value: ProtocolType.UDP,
-  },
-  {
-    name: "TCP",
-    value: ProtocolType.TCP,
-  },
-];
 
 export const S3_BUFFER_PREFIX =
   "AppLogs/<index-prefix>/year=%Y/month=%m/day=%d/";

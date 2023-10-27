@@ -15,6 +15,7 @@ export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($pag
       createdAt
       status
       error
+      logLink
       name
       projectName
       modelName
@@ -34,6 +35,7 @@ export const getTestCheckPoint = /* GraphQL */ `query GetTestCheckPoint($id: ID!
     createdAt
     status
     error
+    logLink
     name
     projectName
     modelName

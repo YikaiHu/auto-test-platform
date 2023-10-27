@@ -19,6 +19,7 @@ import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 
 import { AppSyncStack } from "./appsync-stack";
+import { ServiceStack } from "./service-stack";
 
 export interface APIProps {
   /**
@@ -90,6 +91,10 @@ export class APIStack extends Construct {
       oidcClientId: props.oidcClientId,
       userPoolId: props.userPoolId,
       userPoolClientId: props.userPoolClientId,
+    });
+
+    new ServiceStack(this, "ServiceStack", {
+      graphqlApi: apiStack.graphqlApi,
     });
 
     new CfnOutput(this, "GraphQLAPIEndpoint", {

@@ -45,8 +45,8 @@ def list_test_checkpoints(page=1, count=20):
     logger.info(f"List TestCheckPoints from DynamoDB in page {page} with {count} of records")
 
     items = ddb_util.list_items(filter_expression=Attr("status").ne("INACTIVE"))
-    total, pipelines = paginate(items, page, count, sort_by="createdAt")
+    total, checkPoints = paginate(items, page, count, sort_by="createdAt")
     return {
         "total": total,
-        "pipelines": pipelines,
+        "checkPoints": checkPoints,
     }

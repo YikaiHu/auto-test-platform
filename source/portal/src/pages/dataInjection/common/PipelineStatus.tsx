@@ -17,7 +17,7 @@ limitations under the License.
 import { buildCfnLink } from "assets/js/utils";
 import ClickableRichTooltip from "components/ClickableRichTooltip";
 import ExtLink from "components/ExtLink";
-import { PipelineStatus } from "API";
+import { CheckPointStatus } from "API";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Status from "components/Status/Status";
@@ -48,11 +48,11 @@ const PipelineStatusComp: React.FC<PipelineStatusCompProps> = (
         </div>
       }
       placement="left"
-      disabled={status !== PipelineStatus.ERROR}
+      disabled={status !== CheckPointStatus.ERROR}
     >
       <div className="pr">
         <Status
-          isLink={status === PipelineStatus.ERROR}
+          isLink={status === CheckPointStatus.ERROR}
           status={status || ""}
         />
       </div>

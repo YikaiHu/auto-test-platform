@@ -1,6 +1,6 @@
 {
-  "name": "AWS Service Log",
-  "title": "AWS Service Log Pipelines",
+  "name": "Checkpoints",
+  "title": "Integration Test Checkpoints",
   "list": {
     "type": "Type",
     "account": "Account",
@@ -8,7 +8,10 @@
     "domain": "OpenSearch domain",
     "engineType": "Engine Type",
     "created": "Created time",
-    "status": "Status"
+    "status": "Status",
+    "projectName": "Project Name",
+    "modelName": "Model Name",
+    "checkPointName": "Checkpoint Name"
   },
   "delete": "Delete Service Log",
   "deleteTips": "Are you sure you want to delete the service log ",
@@ -467,5 +470,8 @@
       "archName": "Architecture Diagram"
     }
   },
-  "s3InvalidError": "Amazon S3 location invalid."
+  "s3InvalidError": "Amazon S3 location invalid.",
+  "checkpoints": {
+    "name": "Checkpoints"
+  }
 }

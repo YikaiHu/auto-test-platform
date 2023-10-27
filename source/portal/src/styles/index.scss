@@ -79,12 +79,6 @@
 // multiple select
 @import "../components/MultiSelect/style";
 
-// tag filter
-@import "../components/TagFilter/style";
-
-// tag list
-@import "../components/TagList/style";
-
 // Info Span
 @import "../components/InfoSpan/style";
 
@@ -588,14 +582,14 @@
   }
 }
 
-.clo-login-title {
+.atp-login-title {
   color: #444;
   font-size: 24px;
   padding: 0 0 5px 0;
   text-align: center;
 }
 
-.clo-login {
+.atp-login {
   width: 100vw;
   height: 100vh;
   display: flex;

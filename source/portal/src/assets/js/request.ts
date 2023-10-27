@@ -27,12 +27,9 @@ import gql from "graphql-tag";
 import { AMPLIFY_CONFIG_JSON } from "./const";
 import { Auth } from "aws-amplify";
 import { AmplifyConfigType, AppSyncAuthType } from "types";
-import { ErrorCode } from "API";
 import cloneDeep from "lodash.clonedeep";
 import { decodeResData, encodeParams } from "./xss";
 import i18n from "i18n";
-
-const IGNORE_ERROR_CODE: string[] = [ErrorCode.AccountNotFound];
 
 // Remove Error Code From Error Message
 export const refineErrorMessage = (message: string) => {
@@ -126,12 +123,11 @@ export const appSyncRequestQuery = (query: any, params?: any): any => {
         });
         return;
       }
-      const { errorCode, message } = refineErrorMessage(
+      const { message } = refineErrorMessage(
         showError.message || showError.errors?.[0].message
       );
-      if (!IGNORE_ERROR_CODE.includes(errorCode)) {
-        Swal.fire("Oops...", message, "error");
-      }
+      Swal.fire("Oops...", message, "error");
+
       reject(error);
     }
   });
@@ -168,12 +164,10 @@ export const appSyncRequestMutation = (mutation: any, params?: any): any => {
       resolve(result);
     } catch (error) {
       const showError: any = error;
-      const { errorCode, message } = refineErrorMessage(
+      const { message } = refineErrorMessage(
         showError.message || showError.errors?.[0].message
       );
-      if (!IGNORE_ERROR_CODE.includes(errorCode)) {
-        Swal.fire("Oops...", message, "error");
-      }
+      Swal.fire("Oops...", message, "error");
       reject(error);
     }
   });
