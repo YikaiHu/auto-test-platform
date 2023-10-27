@@ -114,7 +114,7 @@
   },
   "status": {
     "unknown": "Unknown",
-    "active": "Active",
+    "active": "Pass",
     "created": "Created",
     "updated": "Updated",
     "deleted": "Deleted",
@@ -141,7 +141,8 @@
     "running": "Running",
     "succeeded": "Succeeded",
     "timed_out": "Timed Out",
-    "aborted": "Aborted"
+    "aborted": "Aborted",
+    "pass": "Pass"
   },
   "monitoring": {
     "title": "Monitoring",

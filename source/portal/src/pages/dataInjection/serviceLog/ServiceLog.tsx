@@ -63,7 +63,7 @@ const ServiceLog: React.FC = () => {
         count: PAGE_SIZE,
       });
       const dataPipelineList: CheckPoint[] =
-        resData.data.listTestCheckPoints.pipelines;
+        resData.data.listTestCheckPoints.checkPoints;
       setTotoalCount(resData.data.listTestCheckPoints.total);
       setServiceLogList(dataPipelineList);
       setLoadingData(false);

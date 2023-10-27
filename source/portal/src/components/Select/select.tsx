@@ -55,7 +55,7 @@ const ItemStatus = ({ status }: any) => {
           <i className="icon">
             <CheckCircleOutlineIcon fontSize="small" />
           </i>
-          {t("status.active")}
+          {t("status.pass")}
         </span>
       )}
       {status === "IN_PROGRESS" && (

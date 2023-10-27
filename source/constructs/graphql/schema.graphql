@@ -29,3 +29,8 @@ type CheckPoint {
   projectName: String
   modelName: String
 }
+
+type ListCheckPointResponse {
+  checkPoints: [CheckPoint]
+  total: Int
+}
