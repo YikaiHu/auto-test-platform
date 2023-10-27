@@ -18,12 +18,10 @@ import { Link, useLocation } from "react-router-dom";
 import CloseIcon from "@material-ui/icons/Close";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import MenuIcon from "@material-ui/icons/Menu";
-import ExtLink from "components/ExtLink";
 
 import { useSelector, useDispatch } from "react-redux";
 import { ActionType } from "reducer/appReducer";
 import {
-  buildSolutionDocsLink,
   SIDE_BAR_OPEN_STORAGE_ID,
 } from "assets/js/const";
 import { useTranslation } from "react-i18next";
@@ -41,65 +39,12 @@ const SIDE_MENU_LIST = [
     open: true,
   },
   {
-    name: "menu.cluster",
-    link: "/clusters",
+    name: "menu.integrationTests",
+    link: "/integration-test",
     subMenu: [
       {
-        name: "menu.osDomain",
-        link: "/clusters/opensearch-domains",
-      },
-      {
-        name: "menu.importOS",
-        link: "/clusters/import-opensearch-cluster",
-      },
-    ],
-    open: true,
-  },
-  {
-    name: "menu.logPipeline",
-    link: "/log-pipeline",
-    subMenu: [
-      {
-        name: "menu.serviceLog",
-        link: "/log-pipeline/service-log",
-      },
-      {
-        name: "menu.appLog",
-        link: "/log-pipeline/application-log",
-      },
-    ],
-    open: true,
-  },
-  {
-    name: "menu.logSource",
-    link: "/containers",
-    subMenu: [
-      {
-        name: "menu.eksLog",
-        link: "/containers/eks-log",
-      },
-      {
-        name: "menu.instanceGroup",
-        link: "/resources/instance-group",
-      },
-    ],
-    open: true,
-  },
-  {
-    name: "menu.resource",
-    link: "/resources",
-    subMenu: [
-      {
-        name: "menu.logConfig",
-        link: "/resources/log-config",
-      },
-      {
-        name: "menu.crossAccount",
-        link: "/resources/cross-account",
-      },
-      {
-        name: "menu.grafana",
-        link: "/grafana/list",
+        name: "menu.checkpoints",
+        link: "/integration-test/checkpoints",
       },
     ],
     open: true,
@@ -196,14 +141,6 @@ export const SideMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
                 </div>
               );
             })}
-
-            <div className="external-link">
-              <div>
-                <ExtLink to={buildSolutionDocsLink("welcome.html")}>
-                  {t("menu.doc")}
-                </ExtLink>
-              </div>
-            </div>
           </div>
         </div>
       )}

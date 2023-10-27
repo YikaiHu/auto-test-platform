@@ -47,22 +47,9 @@ def lambda_handler(event, _):
     config_str = get_config_str()
     write_to_s3(config_str)
 
-    upgrade_data()
-
     cloudfront_invalidate(CLOUDFRONT_DISTRIBUTION_ID, ["/*"])
 
     return "OK"
-
-
-def upgrade_data():
-    """Perform actions on updating backend data during upgrade"""
-    """
-    upgrade_eks_kind_table()
-    upgrade_app_pipeline_table()
-    upgrade_pipeline_table()
-    upgrade_central_assume_role_policy()
-    """
-    pass
 
 
 def get_config_str():

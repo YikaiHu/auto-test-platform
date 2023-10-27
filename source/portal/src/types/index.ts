@@ -13,20 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import {
-  Codec,
-  CompressionType,
-  DestinationType,
-  IndexSuffix,
-  LogSource,
-  MonitorInput,
-} from "API";
-import { ConfigValidateType } from "assets/js/applog";
 import { AUTH_TYPE } from "aws-appsync-auth-link";
-import { OptionType } from "components/AutoComplete/autoComplete";
-import { InstanceWithStatusType } from "pages/resources/common/InstanceTable";
-import { ExLogConf } from "pages/resources/common/LogConfigComp";
-import { InstanceGroupType } from "pages/resources/instanceGroup/create/CreateInstanceGroup";
 export enum YesNo {
   Yes = "Yes",
   No = "No",
@@ -94,20 +81,6 @@ export const PROXY_INSTANCE_NUMBER_LIST = [
   { name: "4", value: "4" },
 ];
 
-export const CLOUDFRONT_LOG_STANDARD = [
-  {
-    name: "servicelog:cloudfront.standardLogs",
-    value: DestinationType.S3,
-  },
-];
-
-export const CLOUDFRONT_LOG_TYPE = [
-  ...CLOUDFRONT_LOG_STANDARD,
-  {
-    name: "servicelog:cloudfront.realtimeLogs",
-    value: DestinationType.KDS,
-  },
-];
 
 export enum CloudFrontFieldType {
   CUSTOM = "CUSTOM",
@@ -125,15 +98,6 @@ export const CLOUDFRONT_FIELDS_TYPE = [
   },
 ];
 
-export const AppLogClusterIndexSuffixFormatList = [
-  {
-    name: "YYYY-MM-DD-HH",
-    value: IndexSuffix.yyyy_MM_dd_HH,
-  },
-  { name: "YYYY-MM-DD", value: IndexSuffix.yyyy_MM_dd },
-  { name: "YYYY-MM", value: IndexSuffix.yyyy_MM },
-  { name: "YYYY", value: IndexSuffix.yyyy },
-];
 
 export enum SERVICE_LOG_INDEX_SUFFIX {
   yyyy_MM_dd = "yyyy-MM-dd",
@@ -150,11 +114,6 @@ export const ServiceLogClusterIndexSuffixFormatList = [
   { name: "YYYY-MM-DD", value: SERVICE_LOG_INDEX_SUFFIX.yyyy_MM_dd },
   { name: "YYYY-MM", value: SERVICE_LOG_INDEX_SUFFIX.yyyy_MM },
   { name: "YYYY", value: SERVICE_LOG_INDEX_SUFFIX.yyyy },
-];
-
-export const ClusterCompressionTypeList = [
-  { name: "best_compression", value: Codec.best_compression },
-  { name: "default", value: Codec.default },
 ];
 
 export enum WarmTransitionType {
@@ -178,11 +137,6 @@ export enum CWLSourceType {
   CWL = "CloudWatch Logs",
 }
 
-export const CWL_SOURCE_LIST = [
-  { name: CWLSourceType.S3, value: DestinationType.S3 },
-  { name: CWLSourceType.CWL, value: DestinationType.CloudWatch },
-];
-
 export enum S3_STORAGE_CLASS_TYPE {
   STANDARD = "STANDARD",
   STANDARD_IA = "STANDARD_IA",
@@ -204,77 +158,5 @@ export type TagType = {
   key: string;
   value: string;
 };
-export interface ApplicationLogType {
-  openSearchId: string;
-  warmEnable: boolean;
-  coldEnable: boolean;
-  confirmNetworkChecked: boolean;
-  rolloverSizeNotSupport: boolean;
-  enableRolloverByCapacity: boolean;
-  warmTransitionType: string;
-  aosParams: {
-    coldLogTransition: string;
-    domainName: string;
-    engine: string;
-    failedLogBucket: string;
-    indexPrefix: string;
-    logRetention: string;
-    opensearchArn: string;
-    opensearchEndpoint: string;
-    replicaNumbers: string;
-    shardNumbers: string;
-    rolloverSize: string;
-    indexSuffix: string;
-    codec: string;
-    refreshInterval: string;
-    vpc: {
-      privateSubnetIds: string;
-      securityGroupId: string;
-      vpcId: string;
-    };
-    warmLogTransition: string;
-  };
-  bufferType: string;
-  kdsBufferParams: {
-    enableAutoScaling: string;
-    shardCount: string;
-    minCapacity: string;
-    maxCapacity: string;
-  };
-  s3BufferBucketObj: OptionType | null;
-  s3BufferParams: {
-    logBucketName: string;
-    logBucketPrefix: string;
-    logBucketSuffix: string;
-    defaultCmkArn: string;
-    maxFileSize: string;
-    uploadTimeout: string;
-    compressionType: CompressionType | string;
-    s3StorageClass: string;
-  };
-  mskBufferParams: {
-    mskClusterName: string;
-    mskClusterArn: string;
-    mskBrokerServers: string;
-    topic: string;
-  };
-  force: boolean;
-  monitor: MonitorInput;
-}
 
-export interface IngestionPropsType {
-  instanceGroupMethod: CreationMethod | string;
-  chooseInstanceGroup: LogSource[];
-  curInstanceGroup: InstanceGroupType;
-  instanceGroupCheckedInstances: InstanceWithStatusType[];
-  createNewInstanceGroupId: string;
-  instanceGroupNameEmpty: boolean;
-  logConfigMethod: CreationMethod | string;
-  curLogConfig: ExLogConf;
-  logConfigError: ConfigValidateType;
-  logPathEmptyError: boolean;
-  showChooseExistsError: boolean;
-  createDashboard: string;
-  accountId: string;
-  logPath: string;
-}
+

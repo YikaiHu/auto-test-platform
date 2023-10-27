@@ -12,7 +12,8 @@
     "created": "Created time",
     "logPath": "Log Path",
     "status": "Status",
-    "logConfig": "Log Config"
+    "logConfig": "Log Config",
+    "logLink": "Log Link"
   },
   "delete": "Delete Application Log",
   "deletePipeline": {

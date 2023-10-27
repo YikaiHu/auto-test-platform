@@ -1,7 +1,7 @@
 {
   "analytics": "Cloud Foundations | Analytics",
-  "subTitle": "Build log analytics pipelines on OpenSearch",
-  "subDesc": "Auto Test Platform is an AWS Solution that simplifies the build of log analytics pipelines, including log ingestion, log processing and log visualization.",
+  "subTitle": "Trigger and monitor auto test cases",
+  "subDesc": "Aims to streamline and simplify the entire testing lifecycle, from test creation and execution to result analysis and reporting.",
   "benefits": {
     "title": "Benefits and features",
     "consoleTitle": "Web management console",
@@ -22,6 +22,8 @@
   },
   "getStarted": {
     "title": "Get started",
+    "utStatus": "Unit test status",
+    "utStatusDesc": "Check the status of unit test cases",
     "domain": "OpenSearch domain",
     "domainDesc": "Import OpenSearch domain into solution",
     "pipeline": "AWS Service Log Analytics Pipeline",

@@ -520,7 +520,7 @@ def scheduler_client():
         scheduler = boto3.client("scheduler")
         pipeline_id = os.environ["LIGHT_ENGINE_SVC_PIPELINE_ID"]
         
-        scheduler.create_schedule_group(Name=pipeline_id, Tags=[{'Key': 'Application', 'Value': 'clo'}])
+        scheduler.create_schedule_group(Name=pipeline_id, Tags=[{'Key': 'Application', 'Value': 'atp'}])
         
         scheduler.create_schedule(FlexibleTimeWindow={'Mode': 'OFF'}, GroupName=pipeline_id,
                                 Name='LogProcessor', ScheduleExpression='rate(5 minutes)',

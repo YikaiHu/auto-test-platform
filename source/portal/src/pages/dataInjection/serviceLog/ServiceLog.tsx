@@ -21,23 +21,16 @@ import Button from "components/Button";
 import { TablePanel } from "components/TablePanel";
 import Breadcrumb from "components/Breadcrumb";
 import { SelectType } from "components/TablePanel/tablePanel";
-import { appSyncRequestMutation, appSyncRequestQuery } from "assets/js/request";
-import { listServicePipelines } from "graphql/queries";
-import {
-  AnalyticEngineType,
-  Parameter,
-  PipelineStatus,
-  ServicePipeline,
-} from "API";
-import Modal from "components/Modal";
-import { deleteServicePipeline } from "graphql/mutations";
-import { AUTO_REFRESH_INT, ServiceTypeMap } from "assets/js/const";
+import { appSyncRequestQuery } from "assets/js/request";
+import { listTestCheckPoints } from "graphql/queries";
+import { AUTO_REFRESH_INT } from "assets/js/const";
 import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
 import { formatLocalTime } from "assets/js/utils";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "../common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
+import { CheckPoint, CheckPointStatus } from "API";
 
 const PAGE_SIZE = 10;
 
@@ -50,13 +43,10 @@ const ServiceLog: React.FC = () => {
 
   const navigate = useNavigate();
   const [loadingData, setLoadingData] = useState(false);
-  const [serviceLogList, setServiceLogList] = useState<ServicePipeline[]>([]);
-  const [openDeleteModel, setOpenDeleteModel] = useState(false);
-  const [loadingDelete, setLoadingDelete] = useState(false);
-  const [curTipsServiceLog, setCurTipsServiceLog] = useState<ServicePipeline>();
+  const [serviceLogList, setServiceLogList] = useState<CheckPoint[]>([]);
+  // const [curTipsServiceLog, setCurTipsServiceLog] = useState<ServicePipeline>();
   const [selectedServiceLog, setSelectedServiceLog] = useState<any[]>([]);
   const [disabledDetail, setDisabledDetail] = useState(false);
-  const [disabledDelete, setDisabledDelete] = useState(false);
   const [totoalCount, setTotoalCount] = useState(0);
   const [curPage, setCurPage] = useState(1);
 
@@ -68,13 +58,13 @@ const ServiceLog: React.FC = () => {
         setSelectedServiceLog([]);
         setLoadingData(true);
       }
-      const resData: any = await appSyncRequestQuery(listServicePipelines, {
+      const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
         page: curPage,
         count: PAGE_SIZE,
       });
-      const dataPipelineList: ServicePipeline[] =
-        resData.data.listServicePipelines.pipelines;
-      setTotoalCount(resData.data.listServicePipelines.total);
+      const dataPipelineList: CheckPoint[] =
+        resData.data.listTestCheckPoints.pipelines;
+      setTotoalCount(resData.data.listTestCheckPoints.total);
       setServiceLogList(dataPipelineList);
       setLoadingData(false);
     } catch (error) {
@@ -84,43 +74,6 @@ const ServiceLog: React.FC = () => {
 
   const handlePageChange = (event: any, value: number) => {
     setCurPage(value);
-  };
-
-  const getParamValueByKey = (
-    params: Array<Parameter | null> | null | undefined,
-    key: string
-  ) => {
-    if (params && key) {
-      return (
-        params.find((element) => element?.parameterKey === key)
-          ?.parameterValue || "-"
-      );
-    }
-    return "-";
-  };
-
-  // Show Remove Service Log Dialog
-  const removeServiceLog = async () => {
-    setCurTipsServiceLog(selectedServiceLog[0]);
-    setOpenDeleteModel(true);
-  };
-
-  // Confirm to Remove Service Log By Id
-  const confimRemoveServiceLog = async () => {
-    try {
-      setLoadingDelete(true);
-      const removeRes = await appSyncRequestMutation(deleteServicePipeline, {
-        id: curTipsServiceLog?.id,
-      });
-      console.info("removeRes:", removeRes);
-      setLoadingDelete(false);
-      setOpenDeleteModel(false);
-      getServiceLogList();
-      setSelectedServiceLog([]);
-    } catch (error) {
-      setLoadingDelete(false);
-      console.error(error);
-    }
   };
 
   // Click View Detail Button Redirect to detail page
@@ -143,15 +96,15 @@ const ServiceLog: React.FC = () => {
     }
     if (selectedServiceLog.length > 0) {
       if (
-        selectedServiceLog[0].status === PipelineStatus.ACTIVE ||
-        selectedServiceLog[0].status === PipelineStatus.ERROR
+        selectedServiceLog[0].status === CheckPointStatus.ACTIVE ||
+        selectedServiceLog[0].status === CheckPointStatus.ERROR
       ) {
-        setDisabledDelete(false);
+        // setDisabledDelete(false);
       } else {
-        setDisabledDelete(true);
+        // setDisabledDelete(true);
       }
     } else {
-      setDisabledDelete(true);
+      // setDisabledDelete(true);
     }
   }, [selectedServiceLog]);
 
@@ -164,21 +117,17 @@ const ServiceLog: React.FC = () => {
     return () => clearInterval(refreshInterval);
   }, [curPage]);
 
-  const renderPipelineId = (data: ServicePipeline) => {
+  const renderPipelineId = (data: CheckPoint) => {
     return (
-      <Link
-      to={`/log-pipeline/service-log/detail/${data.id}`}
-    >
-      {data.id}
-    </Link>
+      <Link to={`/log-pipeline/service-log/detail/${data.id}`}>{data.id}</Link>
     );
   };
 
-  const renderStatus = (data: ServicePipeline) => {
+  const renderStatus = (data: CheckPoint) => {
     return (
       <PipelineStatusComp
         status={data.status}
-        stackId={data.stackId}
+        stackId={data.id}
         error={data.error}
       />
     );
@@ -205,43 +154,40 @@ const ServiceLog: React.FC = () => {
                   {
                     id: "id",
                     header: "ID",
-                    width: 320,
-                    cell: (e: ServicePipeline) => renderPipelineId(e),
+                    width: 220,
+                    cell: (e: CheckPoint) => renderPipelineId(e),
                   },
                   {
-                    width: 110,
+                    width: 150,
                     id: "type",
-                    header: t("servicelog:list.type"),
-                    cell: (e: ServicePipeline) => {
-                      return ServiceTypeMap[e.type];
+                    header: t("servicelog:list.projectName"),
+                    cell: (e: CheckPoint) => {
+                      return e.projectName;
                     },
                   },
                   {
-                    width: 110,
+                    width: 150,
                     id: "account",
-                    header: t("servicelog:list.account"),
-                    cell: (e: ServicePipeline) => {
+                    header: t("servicelog:list.modelName"),
+                    cell: (e: CheckPoint) => {
                       return (
-                        e.logSourceAccountId ??
-                        getParamValueByKey(e.parameters, "logSourceAccountId")
+                        e.modelName
                       );
                     },
                   },
                   {
                     id: "source",
-                    header: t("servicelog:list.source"),
-                    cell: (e: ServicePipeline) => {
-                      return e.source;
+                    header: t("servicelog:list.checkPointName"),
+                    cell: (e: CheckPoint) => {
+                      return e.name;
                     },
                   },
                   {
                     id: "cluster",
-                    header: t("applog:list.engineType"),
-                    cell: ({ target, engineType }: ServicePipeline) => {
+                    header: t("applog:list.logLink"),
+                    cell: ({ logLink }: CheckPoint) => {
                       return (
-                        (engineType === AnalyticEngineType.LightEngine
-                          ? t("applog:list.lightEngine")
-                          : `${t("applog:list.os")}(${target})`) || "-"
+                        logLink
                       );
                     },
                   },
@@ -249,7 +195,7 @@ const ServiceLog: React.FC = () => {
                     width: 170,
                     id: "created",
                     header: t("servicelog:list.created"),
-                    cell: (e: ServicePipeline) => {
+                    cell: (e: CheckPoint) => {
                       return formatLocalTime(e?.createdAt || "");
                     },
                   },
@@ -257,7 +203,7 @@ const ServiceLog: React.FC = () => {
                     width: 120,
                     id: "status",
                     header: t("servicelog:list.status"),
-                    cell: (e: ServicePipeline) => renderStatus(e),
+                    cell: (e: CheckPoint) => renderStatus(e),
                   },
                 ]}
                 items={serviceLogList}
@@ -284,22 +230,6 @@ const ServiceLog: React.FC = () => {
                     >
                       {t("button.viewDetail")}
                     </Button>
-                    <Button
-                      disabled={disabledDelete}
-                      onClick={() => {
-                        removeServiceLog();
-                      }}
-                    >
-                      {t("button.delete")}
-                    </Button>
-                    <Button
-                      btnType="primary"
-                      onClick={() => {
-                        navigate("/log-pipeline/service-log/create");
-                      }}
-                    >
-                      {t("button.createIngestion")}
-                    </Button>
                   </div>
                 }
                 pagination={
@@ -313,41 +243,6 @@ const ServiceLog: React.FC = () => {
               />
             </div>
           </div>
-          <Modal
-            title={t("servicelog:delete")}
-            fullWidth={false}
-            isOpen={openDeleteModel}
-            closeModal={() => {
-              setOpenDeleteModel(false);
-            }}
-            actions={
-              <div className="button-action no-pb text-right">
-                <Button
-                  btnType="text"
-                  disabled={loadingDelete}
-                  onClick={() => {
-                    setOpenDeleteModel(false);
-                  }}
-                >
-                  {t("button.cancel")}
-                </Button>
-                <Button
-                  loading={loadingDelete}
-                  btnType="primary"
-                  onClick={() => {
-                    confimRemoveServiceLog();
-                  }}
-                >
-                  {t("button.delete")}
-                </Button>
-              </div>
-            }
-          >
-            <div className="modal-content">
-              {t("servicelog:deleteTips")}
-              <b>{`${curTipsServiceLog?.id}`}</b> {"?"}
-            </div>
-          </Modal>
         </div>
       </div>
       <HelpPanel />

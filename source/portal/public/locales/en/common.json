@@ -25,6 +25,8 @@
     "importOS": "Import OpenSearch Domain",
     "logPipeline": "Log Analytics Pipelines",
     "serviceLog": "AWS Service Log",
+    "integrationTests": "Integration Tests",
+    "checkpoints": "Checkpoints",
     "appLog": "Application Log",
     "containers": "Containers",
     "logSource": "Log Sources",
@@ -61,6 +63,7 @@
   },
   "button": {
     "add": "Add",
+    "gotoStatus": "Go to Status",
     "importDomain": "Import domain",
     "createIngestion": "Create a pipeline",
     "viewDetail": "View details",

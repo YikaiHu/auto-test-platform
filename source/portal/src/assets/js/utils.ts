@@ -16,40 +16,11 @@ limitations under the License.
 import { INVALID } from "./const";
 import { format, parseISO } from "date-fns";
 import { formatWithOptions } from "date-fns/fp";
-import {
-  EngineType,
-  LogType,
-  MultiLineLogParser,
-  SchedulerType,
-  SyslogParser,
-} from "API";
-import { ExLogConf } from "pages/resources/common/LogConfigComp";
 import i18n from "i18n";
 import { LogProcessorType, SelectProcessorType } from "reducer/selectProcessor";
 
 const SPRINGBOOT_DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss,SSS";
 const stackPrefix = "ATP";
-
-// Build Dashboard Link
-export const buildDashboardLink = (
-  engine: string,
-  elbLink: string,
-  domainName: string
-) => {
-  if (domainName) {
-    if (engine === EngineType.OpenSearch) {
-      return `https://${domainName}/_dashboards/`;
-    } else {
-      return `https://${domainName}/_plugin/kibana/`;
-    }
-  } else {
-    if (engine === EngineType.OpenSearch) {
-      return `https://${elbLink}/_dashboards/`;
-    } else {
-      return `https://${elbLink}/_plugin/kibana/`;
-    }
-  }
-};
 
 // Split S3 Key String into bucket name and prefix
 const getPosition = (string: string, subString: string, index: number) => {
@@ -1022,20 +993,6 @@ export const buildStepFunctionLink = (region: string, arn = ""): string => {
   }/states/home?region=${region}#/statemachines/view/${arn}`;
 };
 
-export const buildSchedulerLink = (
-  region: string,
-  type?: SchedulerType,
-  group?: string,
-  name?: string
-): string => {
-  const host = region.startsWith("cn")
-    ? "console.amazonaws.cn"
-    : "console.aws.amazon.com";
-  return type === SchedulerType.EventBridgeScheduler
-    ? `https://${region}.${host}/scheduler/home?region=${region}#schedules/${group}/${name}`
-    : `https://${region}.${host}/events/home?region=${region}#/eventbus/${group}/rules/${name}`;
-};
-
 export const buildStepFunctionExecutionLink = (
   region: string,
   arn = ""
@@ -1043,43 +1000,6 @@ export const buildStepFunctionExecutionLink = (
   return `https://${region}.${
     region.startsWith("cn") ? "console.amazonaws.cn" : "console.aws.amazon.com"
   }/states/home?region=${region}#/v2/executions/details/${arn}`;
-};
-
-export const getRegexAndTimeByConfigAndFormat = (
-  curConfig: ExLogConf,
-  format: string
-) => {
-  let tmpExp = "";
-  let tmpTimeExp = "";
-
-  if (curConfig.logType === LogType.Nginx) {
-    tmpExp = buildRegexFromNginxLog(format, true);
-  }
-  if (curConfig.logType === LogType.Apache) {
-    tmpExp = buildRegexFromApacheLog(format);
-  }
-  if (
-    curConfig.logType === LogType.Syslog &&
-    curConfig.syslogParser === SyslogParser.CUSTOM
-  ) {
-    tmpExp = buidSyslogRegexFromConfig(format);
-  }
-  if (
-    curConfig.logType === LogType.SingleLineText ||
-    (curConfig.logType === LogType.MultiLineText &&
-      curConfig.multilineLogParser === MultiLineLogParser.CUSTOM)
-  ) {
-    tmpExp = format;
-  }
-  if (
-    curConfig.logType === LogType.MultiLineText &&
-    curConfig.multilineLogParser === MultiLineLogParser.JAVA_SPRING_BOOT
-  ) {
-    const { regexStr, timeRegexStr } = buildSpringBootRegExFromConfig(format);
-    tmpExp = regexStr;
-    tmpTimeExp = timeRegexStr;
-  }
-  return { tmpExp, tmpTimeExp };
 };
 
 export function containsNonLatinCodepoints(str: string) {
