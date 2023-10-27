@@ -1,0 +1,79 @@
+source/*/*.js
+*.d.ts
+*.js
+node_modules/
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Visual Studio Code project folder
+.vscode/
+
+# Jetbrains project
+.idea/
+
+# mkdocs documentation
+docs/site/
+
+# MaxMind GeoIP database
+source/constructs/lambda/plugin/standard/assets/GeoLite2-City.mmdb
+
+# Test folder including coverage report
+source/tests/
+
+# Deployment
+staging
+global-s3-assets
+regional-s3-assets
+viperlight
+
+### macOS ###
+# General
+.DS_Store
+.DS_Store*
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+## Distribution / packaging
+*.egg-info/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+coverage/
+
+# Environments
+.env
+.venv
+.venv-test
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+

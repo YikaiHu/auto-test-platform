@@ -1,0 +1,87 @@
+.gsui-status {
+  .status-text {
+    position: relative;
+    padding-left: 22px;
+    text-transform: capitalize;
+    i {
+      position: absolute;
+      margin-left: -22px;
+      margin-top: -1px;
+    }
+    &.green {
+      color: green;
+    }
+    &.active {
+      color: green;
+    }
+    &.created {
+      color: green;
+    }
+    &.updated {
+      color: green;
+    }
+    &.online {
+      color: green;
+    }
+    &.ok {
+      color: green;
+    }
+    &.succeeded {
+      color: green;
+    }
+    &.running {
+      color: #0073bb;
+    }
+    &.installing {
+      color: #666;
+    }
+    &.creating {
+      color: #666;
+    }
+    &.distributing {
+      color: #666;
+    }
+    &.inactive {
+      color: #666;
+    }
+    &.deleted {
+      color: #666;
+    }
+    &.reversed {
+      color: #666;
+    }
+    &.insufficient_data {
+      color: #666;
+    }
+    &.aborted {
+      color: #666;
+    }
+    &.error {
+      color: red;
+    }
+    &.red {
+      color: red;
+    }
+    &.offline {
+      color: red;
+    }
+    &.alarm {
+      color: red;
+    }
+    &.failed {
+      color: red;
+    }
+    &.yellow {
+      color: #ff9900;
+    }
+    &.timed_out {
+      color: #ff9900;
+    }
+  }
+  &.is-link {
+    .status-text {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# https://editorconfig.org/
+
+root = true
+
+[source/construct/**]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+[**.md]
+trim_trailing_whitespace = true
+x-soft-wrap-text = true
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
