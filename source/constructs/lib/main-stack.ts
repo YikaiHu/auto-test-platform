@@ -29,6 +29,7 @@ import { AuthStack } from "./main/auth-stack";
 import { CustomResourceStack } from "./main/cr-stack";
 import { PortalStack } from "./main/portal-stack";
 import { VpcStack } from "./main/vpc-stack";
+import { WorkerStack, WorkerProps } from "./main/worker-stack";
 
 const { VERSION } = process.env;
 
@@ -197,6 +198,17 @@ export class MainStack extends Stack {
         ParameterLabels: this.paramLabels,
       },
     };
+
+    const workerEnv = {
+      S3_BUCKET_NAME: portalStack.portalBucket.bucketName,
+    }
+
+    const workerProps: WorkerProps = {
+      env: workerEnv,
+      vpc: vpcStack.vpc,
+    }
+
+    const workerStack = new WorkerStack(this, 'WorkerStack', workerProps)
 
     // Output portal Url
     new CfnOutput(this, "WebConsoleUrl", {

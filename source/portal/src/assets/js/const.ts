@@ -13,15 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import IMAGE_SL_Amazon_S3 from "assets/images/type/amazon_s3.svg";
-import IMAGE_SL_Amazon_RDS from "assets/images/type/amazon_rds.svg";
-import IMAGE_SL_Amazon_CloudTrail from "assets/images/type/amazon_cloudtrail.svg";
-import IMAGE_SL_Amazon_CloudFront from "assets/images/type/amazon_cloudfront.svg";
-import IMAGE_SL_Amazon_Lambda from "assets/images/type/amazon_lambda.svg";
-import IMAGE_SL_Amazon_ELB from "assets/images/type/amazon_elb.svg";
-import IMAGE_SL_Amazon_WAF from "assets/images/type/amazon_waf.svg";
-import IMAGE_SL_Amazon_VPCLogs from "assets/images/type/amazon_vpclogs.svg";
-import IMAGE_SL_Amazon_Config from "assets/images/type/amazon_config.svg";
 
 import { OptionType } from "components/AutoComplete/autoComplete";
 export const INVALID = "invalid";
@@ -310,63 +301,6 @@ export const ServiceLogTypeMap: LogMapType = {
   Amazon_WAF: "waf",
   Amazon_Config: "config",
 };
-
-export const ServiceLogList = [
-  {
-    value: ServiceLogType.Amazon_S3,
-    name: "servicelog:create.service.s3",
-    img: IMAGE_SL_Amazon_S3,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_CloudTrail,
-    name: "servicelog:create.service.trail",
-    img: IMAGE_SL_Amazon_CloudTrail,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_RDS,
-    name: "servicelog:create.service.rds",
-    img: IMAGE_SL_Amazon_RDS,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_CloudFront,
-    name: "servicelog:create.service.cloudfront",
-    img: IMAGE_SL_Amazon_CloudFront,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_Lambda,
-    name: "servicelog:create.service.lambda",
-    img: IMAGE_SL_Amazon_Lambda,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_ELB,
-    name: "servicelog:create.service.elb",
-    img: IMAGE_SL_Amazon_ELB,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_WAF,
-    name: "servicelog:create.service.waf",
-    img: IMAGE_SL_Amazon_WAF,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_VPCLogs,
-    name: "servicelog:create.service.vpc",
-    img: IMAGE_SL_Amazon_VPCLogs,
-    disabled: false,
-  },
-  {
-    value: ServiceLogType.Amazon_Config,
-    name: "servicelog:create.service.config",
-    img: IMAGE_SL_Amazon_Config,
-    disabled: false,
-  },
-];
 
 export enum CreateLogMethod {
   Automatic = "Automatic",

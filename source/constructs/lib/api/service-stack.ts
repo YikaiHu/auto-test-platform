@@ -42,10 +42,15 @@ export class ServiceStack extends Construct {
         name: "PK",
         type: ddb.AttributeType.STRING,
       },
+      sortKey: {
+        name: 'SK',
+        type: ddb.AttributeType.STRING,
+      },
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
       encryption: ddb.TableEncryption.DEFAULT,
       pointInTimeRecovery: true,
+      timeToLiveAttribute: 'ttl',
     });
 
     // Create a lambda to handle all related APIs.

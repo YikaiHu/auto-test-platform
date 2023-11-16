@@ -33,8 +33,9 @@ def lambda_handler(event, _):
 @router.route(field_name="getTestCheckPoint")
 def get_test_checkpoint(id: str):
     """Get a service pipeline detail"""
-    pk = f"TEST_CHECKPOINT#{id}"
-    item = ddb_util.get_item({"PK": pk})
+    pk = "TEST_CHECKPOINT"
+    sk = f"TEST_CHECKPOINT_ID#{id}"
+    item = ddb_util.get_item({"PK": pk, "SK": sk})
 
     return item
 
@@ -50,3 +51,17 @@ def list_test_checkpoints(page=1, count=20):
         "total": total,
         "checkPoints": checkPoints,
     }
+
+
+@router.route(field_name="triggerTestTask")
+def trigger_test_task(task_name: str):
+    """ Trigger test task """
+    logger.info(f"Trigger test task {task_name}")
+    pass
+
+
+@router.route(field_name="getTestResult")
+def get_test_result(task_name: str):
+    """ Get test result """
+    logger.info(f" Get test result {task_name}")
+    pass
