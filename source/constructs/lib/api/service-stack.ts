@@ -19,9 +19,12 @@ import {
   Aws,
   Duration,
   RemovalPolicy,
+  aws_codebuild as codebuild,
   aws_dynamodb as ddb,
   aws_iam as iam,
   aws_lambda as lambda,
+  aws_s3 as s3,
+  aws_s3_notifications as s3n,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
@@ -29,6 +32,8 @@ import { SharedPythonLayer } from "../layer/layer";
 
 export interface SvcStackProps {
   readonly graphqlApi: appsync.GraphqlApi;
+  readonly codeBuildProject: codebuild.PipelineProject;
+  readonly centralBucket: s3.Bucket;
 }
 export class ServiceStack extends Construct {
   readonly svcTable: ddb.Table;
@@ -43,14 +48,14 @@ export class ServiceStack extends Construct {
         type: ddb.AttributeType.STRING,
       },
       sortKey: {
-        name: 'SK',
+        name: "SK",
         type: ddb.AttributeType.STRING,
       },
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
       encryption: ddb.TableEncryption.DEFAULT,
       pointInTimeRecovery: true,
-      timeToLiveAttribute: 'ttl',
+      timeToLiveAttribute: "ttl",
     });
 
     // Create a lambda to handle all related APIs.
@@ -69,6 +74,7 @@ export class ServiceStack extends Construct {
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION: Aws.REGION,
         PARTITION: Aws.PARTITION,
+        CODEBUILD_PROJECT_NAME: props.codeBuildProject.projectName,
       },
       description: `${Aws.STACK_NAME} - APIs Resolver`,
     });
@@ -110,5 +116,52 @@ export class ServiceStack extends Construct {
       requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });
+
+    svcLambdaDS.createResolver("startSingleTest", {
+      typeName: "Mutation",
+      fieldName: "startSingleTest",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    // Set parser for test result
+    const testResultParser = new lambda.Function(this, "TestResultParser", {
+      code: lambda.AssetCode.fromAsset(
+        path.join(__dirname, "../../lambda/api/parser")
+      ),
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "lambda_function.lambda_handler",
+      timeout: Duration.minutes(5),
+      memorySize: 1024,
+      layers: [SharedPythonLayer.getInstance(this)],
+      environment: {
+        TABLE: this.svcTable.tableName,
+        SOLUTION_VERSION: process.env.VERSION || "v1.0.0",
+        ACCOUNT_ID: Aws.ACCOUNT_ID,
+        REGION: Aws.REGION,
+        PARTITION: Aws.PARTITION,
+        CODEBUILD_PROJECT_NAME: props.codeBuildProject.projectName,
+      },
+      description: `${Aws.STACK_NAME} - Test Result Parser`,
+    });
+    const parserFnPolicy = new iam.Policy(this, "ParserFnPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          resources: ["*"],
+          actions: ["*"],
+        }),
+      ],
+    });
+    testResultParser.role!.attachInlinePolicy(parserFnPolicy);
+
+    // Add the S3 event on the central bucket with the target TestResultParser
+    props.centralBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(testResultParser),
+      {
+        prefix: 'test_result/',
+      }
+    );
   }
 }

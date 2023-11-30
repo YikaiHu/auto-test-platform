@@ -20,6 +20,8 @@ import {
   CfnOutput,
   Stack,
   StackProps,
+  aws_s3 as s3,
+  RemovalPolicy,
 } from "aws-cdk-lib";
 import { NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
@@ -93,8 +95,6 @@ export class MainStack extends Stack {
   constructor(scope: Construct, id: string, props: MainProps) {
     super(scope, id, props);
 
-
-
     let solutionName = props.solutionName || "AutoTestPlatform";
     const stackPrefix = "ATP";
 
@@ -143,6 +143,16 @@ export class MainStack extends Stack {
       vpc: vpc,
     });
 
+    const centralBucket = new s3.Bucket(this, "CentralBucket", {
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    const workerProps: WorkerProps = {
+      centralBucket: centralBucket,
+    };
+    const workerStack = new WorkerStack(this, "WorkerStack", workerProps);
+
     // Create the Appsync API stack
     const apiStack = new APIStack(this, "API", {
       oidcClientId: this.oidcClientId,
@@ -152,6 +162,8 @@ export class MainStack extends Stack {
       vpc: vpcStack.vpc,
       subnetIds: subnetIds ? subnetIds : vpcStack.subnetIds,
       processSgId: vpcStack.processSg.securityGroupId,
+      codeBuildProject: workerStack.codeBuildProject,
+      centralBucket: centralBucket,
       authType: this.authType,
       stackPrefix: stackPrefix,
     });
@@ -198,17 +210,6 @@ export class MainStack extends Stack {
         ParameterLabels: this.paramLabels,
       },
     };
-
-    const workerEnv = {
-      S3_BUCKET_NAME: portalStack.portalBucket.bucketName,
-    }
-
-    const workerProps: WorkerProps = {
-      env: workerEnv,
-      vpc: vpcStack.vpc,
-    }
-
-    const workerStack = new WorkerStack(this, 'WorkerStack', workerProps)
 
     // Output portal Url
     new CfnOutput(this, "WebConsoleUrl", {

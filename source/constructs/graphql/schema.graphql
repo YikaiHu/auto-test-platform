@@ -3,12 +3,21 @@ scalar AWSJSON
 
 schema {
   query: Query
+    mutation: Mutation
 }
 
 type Query {
   listTestCheckPoints(page: Int, count: Int): ListCheckPointResponse
 
   getTestCheckPoint(id: ID!): CheckPoint
+}
+
+type Mutation {
+  startSingleTest(
+    projectName: String!
+    marker: String!, 
+    parameters: [ParameterInput]
+  ): String
 }
 
 enum CheckPointStatus {
@@ -33,4 +42,9 @@ type CheckPoint {
 type ListCheckPointResponse {
   checkPoints: [CheckPoint]
   total: Int
+}
+
+input ParameterInput {
+  parameterKey: String
+  parameterValue: String
 }
