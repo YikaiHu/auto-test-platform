@@ -110,7 +110,8 @@
     "viewDetails": "View Details",
     "viewDomain": "View Domain",
     "addNewItem": "Add New Item",
-    "saveAndValidate": "Save and Validate"
+    "saveAndValidate": "Save and Validate",
+    "trigger": "Trigger Task"
   },
   "status": {
     "unknown": "Unknown",

@@ -26,6 +26,7 @@ enum CheckPointStatus {
   CREATING
   DELETING
   ERROR
+  UNKNOWN
 }
 
 type CheckPoint {

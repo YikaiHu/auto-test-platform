@@ -175,6 +175,7 @@ export class CustomResourceStack extends Construct {
         }),
       ]),
       timeout: Duration.minutes(15),
+      installLatestAwsSdk: false,
       onUpdate: {
         service: "Lambda",
         action: "invoke",

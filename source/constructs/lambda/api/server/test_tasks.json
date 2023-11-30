@@ -1,0 +1,62 @@
+[
+  {
+    "id": "TEST_TASK#01",
+    "modelName": "Instance Group",
+    "name": "EC2-EKS-Json",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#02",
+    "modelName": "Server",
+    "name": "WebServer",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#03",
+    "modelName": "Database",
+    "name": "DB-MySQL",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#04",
+    "modelName": "Application",
+    "name": "App-Backend",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#05",
+    "modelName": "Network",
+    "name": "Network-Security",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#06",
+    "modelName": "Storage",
+    "name": "Storage-S3",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#07",
+    "modelName": "Server",
+    "name": "AppServer",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#08",
+    "modelName": "Database",
+    "name": "DB-PostgreSQL",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#09",
+    "modelName": "Application",
+    "name": "App-Frontend",
+    "projectName": "CLO"
+  },
+  {
+    "id": "TEST_TASK#10",
+    "modelName": "Network",
+    "name": "Network-Firewall",
+    "projectName": "CLO"
+  }
+]

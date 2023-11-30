@@ -26,7 +26,6 @@ import { listTestCheckPoints } from "graphql/queries";
 import { AUTO_REFRESH_INT } from "assets/js/const";
 import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
-import { formatLocalTime } from "assets/js/utils";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "../common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
@@ -170,9 +169,7 @@ const ServiceLog: React.FC = () => {
                     id: "account",
                     header: t("servicelog:list.modelName"),
                     cell: (e: CheckPoint) => {
-                      return (
-                        e.modelName
-                      );
+                      return e.modelName;
                     },
                   },
                   {
@@ -180,23 +177,6 @@ const ServiceLog: React.FC = () => {
                     header: t("servicelog:list.checkPointName"),
                     cell: (e: CheckPoint) => {
                       return e.name;
-                    },
-                  },
-                  {
-                    id: "cluster",
-                    header: t("applog:list.logLink"),
-                    cell: ({ logLink }: CheckPoint) => {
-                      return (
-                        logLink
-                      );
-                    },
-                  },
-                  {
-                    width: 170,
-                    id: "created",
-                    header: t("servicelog:list.created"),
-                    cell: (e: CheckPoint) => {
-                      return formatLocalTime(e?.createdAt || "");
                     },
                   },
                   {
@@ -229,6 +209,15 @@ const ServiceLog: React.FC = () => {
                       }}
                     >
                       {t("button.viewDetail")}
+                    </Button>
+                    <Button
+                      loading={disabledDetail}
+                      btnType="primary"
+                      onClick={() => {
+                        clickToReviewDetail();
+                      }}
+                    >
+                      {t("button.trigger")}
                     </Button>
                   </div>
                 }

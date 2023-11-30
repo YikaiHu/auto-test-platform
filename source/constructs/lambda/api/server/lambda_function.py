@@ -3,6 +3,7 @@
 
 import logging
 import os
+import json
 
 from boto3.dynamodb.conditions import Attr
 
@@ -42,26 +43,41 @@ def get_test_checkpoint(id: str):
 
 @router.route(field_name="listTestCheckPoints")
 def list_test_checkpoints(page=1, count=20):
-    """ List test checkpoints """
-    logger.info(f"List TestCheckPoints from DynamoDB in page {page} with {count} of records")
+    """List test checkpoints"""
+    logger.info(
+        f"List TestCheckPoints from JSON file in page {page} with {count} of records"
+    )
 
-    items = ddb_util.list_items(filter_expression=Attr("status").ne("INACTIVE"))
-    total, checkPoints = paginate(items, page, count, sort_by="createdAt")
+    with open("test_tasks.json", "r") as json_file:
+        items = json.load(json_file)
+
+    for item in items:
+        # Here we set the status to UNKNOWN for all test checkpoints
+        # we will get these status from DynamoDB
+        item["status"] = "UNKNOWN"
+
+    total, checkPoints = paginate(items, page, count, sort_by="id")
     return {
         "total": total,
         "checkPoints": checkPoints,
     }
 
 
-@router.route(field_name="triggerTestTask")
-def trigger_test_task(task_name: str):
-    """ Trigger test task """
-    logger.info(f"Trigger test task {task_name}")
+@router.route(field_name="startSingleTest")
+def start_single_task(**args):
+    """Start single test task"""
+    project_name = args.get("projectName")
+    marker = args.get("marker")
+    params = args.get("parameters")
+
+    logger.info(
+        f"Start single test task {project_name} with marker {marker} and parameters {params}"
+    )
     pass
 
 
 @router.route(field_name="getTestResult")
 def get_test_result(task_name: str):
-    """ Get test result """
+    """Get test result"""
     logger.info(f" Get test result {task_name}")
     pass
