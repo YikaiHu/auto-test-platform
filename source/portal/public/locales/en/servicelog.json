@@ -473,10 +473,5 @@
   "s3InvalidError": "Amazon S3 location invalid.",
   "checkpoints": {
     "name": "Checkpoints"
-  },
-  "common": {
-    "button": {
-      "trigger": "Trigger Task"
-    }
   }
 }
