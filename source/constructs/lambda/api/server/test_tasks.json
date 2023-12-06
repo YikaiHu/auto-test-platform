@@ -2,7 +2,7 @@
   {
     "id": "TEST_TASK#01",
     "modelName": "Instance Group",
-    "name": "EC2-EKS-Json",
+    "name": "EC2-KDS-Json",
     "projectName": "CLO"
   },
   {

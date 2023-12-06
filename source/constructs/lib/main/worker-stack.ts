@@ -1,4 +1,9 @@
-import { Aws, aws_s3 as s3, aws_codebuild as codebuild } from "aws-cdk-lib";
+import {
+  Aws,
+  aws_s3 as s3,
+  aws_iam as iam,
+  aws_codebuild as codebuild,
+} from "aws-cdk-lib";
 import { Construct } from "constructs";
 
 export interface WorkerProps {
@@ -14,17 +19,17 @@ export class WorkerStack extends Construct {
     const environmentVariables: {
       [key: string]: codebuild.BuildEnvironmentVariable;
     } = {
-      MY_ENV_VAR_1: {
+      branch: {
         type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-        value: "value1",
+        value: "fake_branch",
       },
-      MY_ENV_VAR_2: {
+      code_commit_role: {
         type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-        value: "value2",
+        value: "fake_code_commit_role",
       },
     };
 
-    this.codeBuildProject = new codebuild.PipelineProject(
+    this.codeBuildProject = new codebuild.Project(
       this,
       "ATPCodeBuild",
       {
@@ -51,5 +56,11 @@ export class WorkerStack extends Construct {
       }
     );
     props.centralBucket.grantReadWrite(this.codeBuildProject);
+    this.codeBuildProject.addToRolePolicy(
+      new iam.PolicyStatement({
+        resources: ["*"],
+        actions: ["*"],
+      })
+    );
   }
 }
