@@ -14,7 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { CfnOutput } from "aws-cdk-lib";
+import {
+  CfnOutput,
+  aws_codebuild as codebuild,
+  aws_s3 as s3,
+} from "aws-cdk-lib";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 
@@ -73,6 +77,8 @@ export interface APIProps {
   readonly oidcClientId: string;
 
   readonly stackPrefix: string;
+  readonly codeBuildProject: codebuild.PipelineProject;
+  readonly centralBucket: s3.Bucket;
 }
 
 /**
@@ -95,6 +101,8 @@ export class APIStack extends Construct {
 
     new ServiceStack(this, "ServiceStack", {
       graphqlApi: apiStack.graphqlApi,
+      codeBuildProject: props.codeBuildProject,
+      centralBucket: props.centralBucket,
     });
 
     new CfnOutput(this, "GraphQLAPIEndpoint", {
