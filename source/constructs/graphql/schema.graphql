@@ -9,7 +9,9 @@ schema {
 type Query {
   listTestCheckPoints(page: Int, count: Int): ListCheckPointResponse
 
-  getTestCheckPoint(id: ID!): CheckPoint
+  listTestHistory(page: Int, count: Int): ListTestHistoryResponse
+
+  getTestHistory(id: ID!): TestHistory
 }
 
 type Mutation {
@@ -21,10 +23,8 @@ type Mutation {
 }
 
 enum CheckPointStatus {
-  ACTIVE
-  INACTIVE
+  PASS
   CREATING
-  DELETING
   ERROR
   UNKNOWN
 }
@@ -32,10 +32,8 @@ enum CheckPointStatus {
 type CheckPoint {
   id: ID!
   createdAt: String
+  lastTestedAt: String
   status: CheckPointStatus
-  error: String
-  logLink: String
-  name: String
   projectName: String
   modelName: String
 }
@@ -45,7 +43,31 @@ type ListCheckPointResponse {
   total: Int
 }
 
+type TestHistory {
+  id: ID!
+  createdAt: String
+  duration: Int
+  status: CheckPointStatus
+  parameters: [Parameters]
+  result: TestResult
+}
+
+type TestResult {
+  trace: String
+  message: String
+}
+
+type ListTestHistoryResponse {
+  testHistory: [TestHistory]
+  total: Int
+}
+
 input ParameterInput {
+  parameterKey: String
+  parameterValue: String
+}
+
+type Parameters {
   parameterKey: String
   parameterValue: String
 }

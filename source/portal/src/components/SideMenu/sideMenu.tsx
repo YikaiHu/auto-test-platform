@@ -43,7 +43,7 @@ const SIDE_MENU_LIST = [
     link: "/integration-test",
     subMenu: [
       {
-        name: "menu.checkpoints",
+        name: "Check Points",
         link: "/integration-test/checkpoints",
       },
     ],

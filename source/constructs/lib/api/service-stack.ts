@@ -117,9 +117,16 @@ export class ServiceStack extends Construct {
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });
 
-    svcLambdaDS.createResolver("getTestCheckPoint", {
+    svcLambdaDS.createResolver("listTestHistory", {
       typeName: "Query",
-      fieldName: "getTestCheckPoint",
+      fieldName: "listTestHistory",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    svcLambdaDS.createResolver("getTestHistory", {
+      typeName: "Query",
+      fieldName: "getTestHistory",
       requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });

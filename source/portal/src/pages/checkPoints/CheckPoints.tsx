@@ -23,7 +23,7 @@ const CheckPoints: React.FC = () => {
   const { t } = useTranslation();
   const breadCrumbList = [
     { name: t("name"), link: "/" },
-    { name: t("servicelog:name") },
+    { name: "Check Points" },
   ];
 
   const navigate = useNavigate();
