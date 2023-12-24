@@ -110,7 +110,7 @@ export class CustomResourceStack extends Construct {
 
     const templateBucket =
       process.env.TEMPLATE_OUTPUT_BUCKET || "aws-gcr-solutions";
-    const solutionName = process.env.SOLUTION_TRADEMARKEDNAME || "log-hub"; // Old name
+    const solutionName = process.env.SOLUTION_TRADEMARKEDNAME || "auto-test-platform";
 
     // If in China Region, disable install latest aws-sdk
     const isCN = new CfnCondition(this, "isCN", {

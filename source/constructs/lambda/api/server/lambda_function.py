@@ -6,11 +6,18 @@ import os
 import json
 from enum import Enum
 
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 
 from commonlib import AWSConnection, handle_error, AppSyncRouter
+from commonlib.utils import paginate
 
 import boto3
+
+
+class ENTITY_TYPE(Enum):
+    MARKER = "MARKER"
+    PROJECT = "PROJECT"
+    TEST = "TEST"
 
 
 logger = logging.getLogger()
@@ -20,7 +27,6 @@ conn = AWSConnection()
 router = AppSyncRouter()
 
 table_name = os.environ.get("TABLE")
-# ddb_util = DynamoDBUtil(table_name)
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(table_name)
@@ -35,16 +41,6 @@ def lambda_handler(event, _):
     return router.resolve(event)
 
 
-@router.route(field_name="getTestCheckPoint")
-def get_test_checkpoint(id: str):
-    """Get a service pipeline detail"""
-    pk = "TEST_CHECKPOINT"
-    sk = f"TEST_CHECKPOINT_ID#{id}"
-    item = ddb_util.get_item({"PK": pk, "SK": sk})
-
-    return item
-
-
 @router.route(field_name="listTestCheckPoints")
 def list_test_checkpoints(page=1, count=20):
     """List test checkpoints"""
@@ -52,19 +48,92 @@ def list_test_checkpoints(page=1, count=20):
         f"List TestCheckPoints from JSON file in page {page} with {count} of records"
     )
 
-    with open("test_tasks.json", "r") as json_file:
-        items = json.load(json_file)
+    response = table.scan(
+        FilterExpression=Attr("PK").begins_with(f"{ENTITY_TYPE.MARKER.value}#"),
+        Limit=count,
+    )
+
+    items = response.get("Items", [])
+    total = response.get("Count", 0)
 
     for item in items:
-        # Here we set the status to UNKNOWN for all test checkpoints
-        # we will get these status from DynamoDB
-        item["status"] = "UNKNOWN"
+        pk = item.get("PK", "")
+        item["id"] = pk.split("#")[1] if "#" in pk else pk
+
+        history_response = table.query(
+            IndexName="reverseLookup",
+            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{item['id']}"),
+            ScanIndexForward=False,
+            Limit=1
+        )
+
+        latest_test = history_response.get("Items", [])
+        if latest_test:
+            item["status"] = latest_test[0].get("status", "UNKNOWN")
+        else:
+            item["status"] = "UNKNOWN"
 
     total, checkPoints = paginate(items, page, count, sort_by="id")
     return {
         "total": total,
         "checkPoints": checkPoints,
     }
+
+
+@router.route(field_name="listTestHistory")
+def list_test_history(id, page=1, count=20):
+    """List test history"""
+    logger.info(f"List history from JSON file in page {page} with {count} of records")
+
+    response = table.query(
+        IndexName="reverseLookup",
+        KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{id}"),
+        Limit=count,
+    )
+
+    items = response.get("Items", [])
+    total = response.get("Count", 0)
+
+    for item in items:
+        pk = item.get("PK", "")
+        item["id"] = pk.split("#")[1] if "#" in pk else pk
+        sk = item.get("SK", "")
+        item["markerId"] = sk.split("#")[1] if "#" in sk else sk
+
+    total, testHistories = paginate(items, page, count, sort_by="id")
+    return {
+        "total": total,
+        "testHistories": testHistories,
+    }
+
+
+@router.route(field_name="getTestHistory")
+def get_test_history(id: str):
+    """Get test history for a given ID."""
+    logger.info(f"Get test history for ID: {id}")
+
+    try:
+        response = table.query(
+            KeyConditionExpression=Key('PK').eq(f"{ENTITY_TYPE.TEST.value}#{id}")
+        )
+        items = response.get('Items', [])
+
+        if items:
+            item = items[0]
+            pk = item.get("PK", "")
+            item["id"] = pk.split("#")[1] if "#" in pk else pk
+            sk = item.get("SK", "")
+            item["markerId"] = sk.split("#")[1] if "#" in sk else sk
+
+            return item
+        else:
+            logger.info(f"No test history found for ID: {id}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error fetching test history: {e}")
+        return None
+
 
 
 @router.route(field_name="startSingleTest")
@@ -78,58 +147,3 @@ def start_single_task(**args):
         f"Start single test task {project_name} with marker {marker} and parameters {params}"
     )
     pass
-
-
-@router.route(field_name="getTestResult")
-def get_test_result(task_name: str):
-    """Get test result"""
-    logger.info(f" Get test result {task_name}")
-    pass
-
-
-class ENTITY_TYPE(Enum):
-    MARKER = "MARKER"
-    PROJECT = "PROJECT"
-
-
-def read_marker(marker_id, project_id):
-    response = table.get_item(
-        Key={
-            "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
-            "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
-        }
-    )
-    return response.get("Item")
-
-
-# Example usage
-marker = read_marker("marker123", "project456")
-print(marker)
-
-
-def create_marker(marker_id, project_id, additional_attributes):
-    item = {
-        "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
-        "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
-        **additional_attributes,
-    }
-    table.put_item(Item=item)
-
-
-# Example usage
-create_marker(
-    "marker123", "project456", {"attribute1": "value1", "attribute2": "value2"}
-)
-
-
-def list_markers_by_project(project_id):
-    response = table.query(
-        IndexName='projectLookup',  # Replace with your GSI name if different
-        KeyConditionExpression=boto3.dynamodb.conditions.Key('PK').eq(f'{ENTITY_TYPE.PROJECT.value}#{project_id}')
-    )
-    return response.get('Items', [])
-
-# Example usage
-markers = list_markers_by_project('project456')
-for marker in markers:
-    print(marker)

@@ -9,7 +9,7 @@ schema {
 type Query {
   listTestCheckPoints(page: Int, count: Int): ListCheckPointResponse
 
-  listTestHistory(page: Int, count: Int): ListTestHistoryResponse
+  listTestHistory(id: ID!, page: Int, count: Int): ListTestHistoryResponse
 
   getTestHistory(id: ID!): TestHistory
 }
@@ -25,6 +25,7 @@ type Mutation {
 enum CheckPointStatus {
   PASS
   CREATING
+  FAILED
   ERROR
   UNKNOWN
 }
@@ -45,11 +46,13 @@ type ListCheckPointResponse {
 
 type TestHistory {
   id: ID!
+  markerId: String
   createdAt: String
   duration: Int
   status: CheckPointStatus
   parameters: [Parameters]
   result: TestResult
+  metaData: MetaData
 }
 
 type TestResult {
@@ -57,8 +60,14 @@ type TestResult {
   message: String
 }
 
+type MetaData {
+  accountId: String
+  region: String
+  stackName: String
+}
+
 type ListTestHistoryResponse {
-  testHistory: [TestHistory]
+  testHistories: [TestHistory]
   total: Int
 }
 

@@ -13,10 +13,8 @@ export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($pag
     checkPoints {
       id
       createdAt
+      lastTestedAt
       status
-      error
-      logLink
-      name
       projectName
       modelName
       __typename
@@ -29,20 +27,67 @@ export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($pag
   APITypes.ListTestCheckPointsQueryVariables,
   APITypes.ListTestCheckPointsQuery
 >;
-export const getTestCheckPoint = /* GraphQL */ `query GetTestCheckPoint($id: ID!) {
-  getTestCheckPoint(id: $id) {
-    id
-    createdAt
-    status
-    error
-    logLink
-    name
-    projectName
-    modelName
+export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $page: Int, $count: Int) {
+  listTestHistory(id: $id, page: $page, count: $count) {
+    testHistories {
+      id
+      markerId
+      createdAt
+      duration
+      status
+      parameters {
+        parameterKey
+        parameterValue
+        __typename
+      }
+      result {
+        trace
+        message
+        __typename
+      }
+      metaData {
+        accountId
+        region
+        stackName
+        __typename
+      }
+      __typename
+    }
+    total
     __typename
   }
 }
 ` as GeneratedQuery<
-  APITypes.GetTestCheckPointQueryVariables,
-  APITypes.GetTestCheckPointQuery
+  APITypes.ListTestHistoryQueryVariables,
+  APITypes.ListTestHistoryQuery
+>;
+export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!) {
+  getTestHistory(id: $id) {
+    id
+    markerId
+    createdAt
+    duration
+    status
+    parameters {
+      parameterKey
+      parameterValue
+      __typename
+    }
+    result {
+      trace
+      message
+      __typename
+    }
+    metaData {
+      accountId
+      region
+      stackName
+      __typename
+    }
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetTestHistoryQueryVariables,
+  APITypes.GetTestHistoryQuery
 >;

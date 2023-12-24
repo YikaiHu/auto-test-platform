@@ -6,14 +6,14 @@ import { TablePanel } from "components/TablePanel";
 import Breadcrumb from "components/Breadcrumb";
 import { SelectType } from "components/TablePanel/tablePanel";
 import { appSyncRequestQuery } from "assets/js/request";
-import { listTestCheckPoints } from "graphql/queries";
+import { listTestHistory } from "graphql/queries";
 import { AUTO_REFRESH_INT } from "assets/js/const";
 import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
-import { CheckPoint, CheckPointStatus } from "API";
+import { CheckPointStatus, TestHistory } from "API";
 const PAGE_SIZE = 10;
 
 const CheckPointsHistory: React.FC = () => {
@@ -30,27 +30,28 @@ const CheckPointsHistory: React.FC = () => {
 
   const navigate = useNavigate();
   const [loadingData, setLoadingData] = useState(false);
-  const [checkPointsList, setCheckPointsList] = useState<CheckPoint[]>([]);
-  const [selectedCheckPoints, setSelectedCheckPoints] = useState<any[]>([]);
+  const [testHistoriesList, setTestHistoriesList] = useState<TestHistory[]>([]);
+  const [selectedTestHistories, setSelectedTestHistories] = useState<any[]>([]);
   const [disabledDetail, setDisabledDetail] = useState(false);
-  const [totoalCount, setTotoalCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [curPage, setCurPage] = useState(1);
 
-  const getTestHistory = async (hideLoading = false) => {
+  const asyncListTestHistory = async (hideLoading = false) => {
     try {
       if (!hideLoading) {
-        setCheckPointsList([]);
-        setSelectedCheckPoints([]);
+        setTestHistoriesList([]);
+        setSelectedTestHistories([]);
         setLoadingData(true);
       }
-      const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
+      const resData: any = await appSyncRequestQuery(listTestHistory, {
+        id: id,
         page: curPage,
         count: PAGE_SIZE,
       });
-      const dataPipelineList: CheckPoint[] =
-        resData.data.listTestCheckPoints.checkPoints;
-      setTotoalCount(resData.data.listTestCheckPoints.total);
-      setCheckPointsList(dataPipelineList);
+      const testHistoryList: TestHistory[] =
+        resData.data.listTestHistory.testHistories;
+      setTotalCount(resData.data.listTestHistory.total);
+      setTestHistoriesList(testHistoryList);
       setLoadingData(false);
     } catch (error) {
       console.error(error);
@@ -63,23 +64,23 @@ const CheckPointsHistory: React.FC = () => {
 
   // Click View Detail Button Redirect to detail page
   const clickToReviewDetail = () => {
-    navigate(`/integration-test/checkpoints/history/detail${selectedCheckPoints[0]?.id}`);
+    navigate(`/integration-test/checkpoints/history/detail${selectedTestHistories[0]?.id}`);
   };
 
   useEffect(() => {
-    getTestHistory();
+    asyncListTestHistory();
   }, [curPage]);
 
   useEffect(() => {
-    if (selectedCheckPoints.length === 1) {
+    if (selectedTestHistories.length === 1) {
       setDisabledDetail(false);
     } else {
       setDisabledDetail(true);
     }
-    if (selectedCheckPoints.length > 0) {
+    if (selectedTestHistories.length > 0) {
       if (
-        selectedCheckPoints[0].status === CheckPointStatus.ACTIVE ||
-        selectedCheckPoints[0].status === CheckPointStatus.ERROR
+        selectedTestHistories[0].status === CheckPointStatus.PASS ||
+        selectedTestHistories[0].status === CheckPointStatus.ERROR
       ) {
         // setDisabledDelete(false);
       } else {
@@ -88,29 +89,29 @@ const CheckPointsHistory: React.FC = () => {
     } else {
       // setDisabledDelete(true);
     }
-  }, [selectedCheckPoints]);
+  }, [selectedTestHistories]);
 
   // Auto Refresh List
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      getTestHistory(true);
+      asyncListTestHistory(true);
     }, AUTO_REFRESH_INT);
     console.info("refreshInterval:", refreshInterval);
     return () => clearInterval(refreshInterval);
   }, [curPage]);
 
-  const renderPipelineId = (data: CheckPoint) => {
+  const renderHistoryId = (data: TestHistory) => {
     return (
       <Link to={`/integration-test/checkpoints/history/detail/${data.id}`}>{data.id}</Link>
     );
   };
 
-  const renderStatus = (data: CheckPoint) => {
+  const renderStatus = (data: TestHistory) => {
     return (
       <PipelineStatusComp
         status={data.status}
         stackId={data.id}
-        error={data.error}
+        error={data.status}
       />
     );
   };
@@ -125,10 +126,10 @@ const CheckPointsHistory: React.FC = () => {
             <div className="table-data">
               <TablePanel
                 trackId="id"
-                defaultSelectItem={selectedCheckPoints}
+                defaultSelectItem={selectedTestHistories}
                 title={"Test History"}
                 changeSelected={(item) => {
-                  setSelectedCheckPoints(item);
+                  setSelectedTestHistories(item);
                 }}
                 loading={loadingData}
                 selectType={SelectType.RADIO}
@@ -137,46 +138,42 @@ const CheckPointsHistory: React.FC = () => {
                     id: "id",
                     header: "ID",
                     width: 220,
-                    cell: (e: CheckPoint) => renderPipelineId(e),
+                    cell: (e: TestHistory) => renderHistoryId(e),
                   },
                   {
-                    width: 150,
-                    id: "type",
-                    header: t("servicelog:list.projectName"),
-                    cell: (e: CheckPoint) => {
-                      return e.projectName;
+                    width: 380,
+                    id: "parameters",
+                    header: t("Parameters"),
+                    cell: (e: TestHistory) => {
+                      if (e.parameters && e.parameters.length > 0) {
+                        return e.parameters.map(param => param ? `${param.parameterKey}: ${param.parameterValue}` : '').join(', ');
+                      }
+                      return 'No Parameters';
                     },
                   },
                   {
                     width: 150,
-                    id: "account",
-                    header: t("servicelog:list.modelName"),
-                    cell: (e: CheckPoint) => {
-                      return e.modelName;
-                    },
-                  },
-                  {
-                    id: "source",
-                    header: t("servicelog:list.checkPointName"),
-                    cell: (e: CheckPoint) => {
-                      return e.name;
-                    },
-                  },
-                  {
                     id: "createTime",
-                    header: "Create Time",
-                    cell: (e: CheckPoint) => {
-                      return e.name;
+                    header: t("Created"),
+                    cell: (e: TestHistory) => {
+                      return e.createdAt;
+                    },
+                  },
+                  {
+                    id: "duration",
+                    header: t("Duration"),
+                    cell: (e: TestHistory) => {
+                      return e.duration;
                     },
                   },
                   {
                     width: 120,
                     id: "status",
-                    header: t("servicelog:list.status"),
-                    cell: (e: CheckPoint) => renderStatus(e),
+                    header: t("Status"),
+                    cell: (e: TestHistory) => renderStatus(e),
                   },
                 ]}
-                items={checkPointsList}
+                items={testHistoriesList}
                 actions={
                   <div>
                     <Button
@@ -184,7 +181,7 @@ const CheckPointsHistory: React.FC = () => {
                       disabled={loadingData}
                       onClick={() => {
                         if (curPage === 1) {
-                          getTestHistory();
+                          asyncListTestHistory();
                         } else {
                           setCurPage(1);
                         }
@@ -204,7 +201,7 @@ const CheckPointsHistory: React.FC = () => {
                 }
                 pagination={
                   <Pagination
-                    count={Math.ceil(totoalCount / PAGE_SIZE)}
+                    count={Math.ceil(totalCount / PAGE_SIZE)}
                     page={curPage}
                     onChange={handlePageChange}
                     size="small"

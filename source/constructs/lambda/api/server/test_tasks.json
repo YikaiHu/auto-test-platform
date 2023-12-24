@@ -1,16 +1,6 @@
-[
-  {
-    "id": "TEST_TASK#01",
-    "modelName": "Application Log",
-    "name": "EC2",
-    "projectName": "CLO",
-    "marker": "CLO_EC2"
-  },
-  {
-    "id": "TEST_TASK#02",
-    "modelName": "Application Log",
-    "name": "EKS",
-    "projectName": "CLO",
-    "marker": "CLO_EKS"
-  }
-]
+{
+  "PK": "MARKER#asdqab125-qwer-4aef-89a1-asdfgertyw",
+  "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+  "projectName": "CLO",
+  "modelName": "EC2"
+ }

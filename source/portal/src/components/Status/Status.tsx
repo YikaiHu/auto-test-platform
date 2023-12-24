@@ -54,6 +54,7 @@ interface StatusProps {
 const iconMap: any = {
   green: <CheckCircleOutlineIcon fontSize="small" />,
   active: <CheckCircleOutlineIcon fontSize="small" />,
+  pass: <CheckCircleOutlineIcon fontSize="small" />,
   created: <CheckCircleOutlineIcon fontSize="small" />,
   updated: <CheckCircleOutlineIcon fontSize="small" />,
   online: <CheckCircleOutlineIcon fontSize="small" />,
