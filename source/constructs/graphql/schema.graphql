@@ -16,15 +16,14 @@ type Query {
 
 type Mutation {
   startSingleTest(
-    projectName: String!
-    marker: String!, 
+    markerId: String!, 
     parameters: [ParameterInput]
   ): String
 }
 
 enum CheckPointStatus {
   PASS
-  CREATING
+  RUNNING
   FAILED
   ERROR
   UNKNOWN

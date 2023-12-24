@@ -16,6 +16,7 @@ import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
 import { CheckPoint, CheckPointStatus } from "API";
 import TriggerDialog from "./TriggerDialog";
+import { startSingleTest } from "graphql/mutations";
 
 const PAGE_SIZE = 10;
 
@@ -36,9 +37,29 @@ const CheckPoints: React.FC = () => {
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
-  const handleTrigger = (buffer: string, logType: string) => {
+  const handleTrigger = async (buffer: string, logType: string) => {
     console.log("Buffer:", buffer, "Log Type:", logType);
-    setIsTriggerDialogOpen(false);
+    try {
+      const resData: any = await appSyncRequestQuery(startSingleTest, {
+        markerId: selectedCheckPoints[0].id,
+        parameters: [
+          {
+            parameterKey: "buffer",
+            parameterValue: buffer,
+          },
+          {
+            parameterKey: "logType",
+            parameterValue: logType,
+          },
+        ]
+      });
+      console.info("resData:", resData);
+      navigate(`/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsTriggerDialogOpen(false);
+    }
   };
 
   // Get Service Log List
@@ -143,7 +164,7 @@ const CheckPoints: React.FC = () => {
                   {
                     id: "id",
                     header: "ID",
-                    width: 220,
+                    width: 200,
                     cell: (e: CheckPoint) => renderCheckPointId(e),
                   },
                   {
@@ -163,9 +184,9 @@ const CheckPoints: React.FC = () => {
                     },
                   },
                   {
-                    width: 120,
+                    width: 150,
                     id: "status",
-                    header: "Status",
+                    header: "Latest Test Status",
                     cell: (e: CheckPoint) => renderStatus(e),
                   },
                 ]}

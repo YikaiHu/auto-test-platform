@@ -65,6 +65,19 @@ export class ServiceStack extends Construct {
       projectionType: ddb.ProjectionType.ALL,
     });
 
+    this.svcTable.addGlobalSecondaryIndex({
+      indexName: 'sortCreatedAtIndex',
+      partitionKey: { 
+        name: 'SK',
+        type: ddb.AttributeType.STRING 
+      },
+      sortKey: { 
+        name: 'createdAt',
+        type: ddb.AttributeType.STRING
+      },
+      projectionType: ddb.ProjectionType.ALL,
+    });
+
     // Create a lambda to handle all related APIs.
     const svcHandler = new lambda.Function(this, "ServiceHandler", {
       code: lambda.AssetCode.fromAsset(

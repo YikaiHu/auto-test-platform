@@ -64,7 +64,7 @@ const CheckPointsHistory: React.FC = () => {
 
   // Click View Detail Button Redirect to detail page
   const clickToReviewDetail = () => {
-    navigate(`/integration-test/checkpoints/history/detail${selectedTestHistories[0]?.id}`);
+    navigate(`/integration-test/checkpoints/history/detail/${selectedTestHistories[0]?.id}`);
   };
 
   useEffect(() => {

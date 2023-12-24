@@ -27,6 +27,7 @@ const TriggerDialog: React.FC<TriggerDialogProps> = ({
   const paperStyle = {
     minWidth: "500px", 
   };
+  const isTriggerEnabled = bufferSelection && logTypeSelection;
 
   return (
     <Dialog open={isOpen} onClose={onClose} PaperProps={{ style: paperStyle }}>
@@ -70,6 +71,7 @@ const TriggerDialog: React.FC<TriggerDialogProps> = ({
         <Button onClick={onClose}>Cancel</Button>
         <Button
           btnType="primary"
+          disabled={!isTriggerEnabled}
           onClick={() => onTrigger(bufferSelection, logTypeSelection)}
         >
           Trigger

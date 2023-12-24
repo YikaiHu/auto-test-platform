@@ -3,7 +3,9 @@
 
 import logging
 import os
-import json
+from datetime import datetime
+import random
+import uuid
 from enum import Enum
 
 from boto3.dynamodb.conditions import Attr, Key
@@ -61,10 +63,12 @@ def list_test_checkpoints(page=1, count=20):
         item["id"] = pk.split("#")[1] if "#" in pk else pk
 
         history_response = table.query(
-            IndexName="reverseLookup",
-            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{item['id']}"),
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(
+                f"{ENTITY_TYPE.MARKER.value}#{item['id']}"
+            ),
             ScanIndexForward=False,
-            Limit=1
+            Limit=1,
         )
 
         latest_test = history_response.get("Items", [])
@@ -86,8 +90,9 @@ def list_test_history(id, page=1, count=20):
     logger.info(f"List history from JSON file in page {page} with {count} of records")
 
     response = table.query(
-        IndexName="reverseLookup",
+        IndexName="sortCreatedAtIndex",
         KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{id}"),
+        ScanIndexForward=False,
         Limit=count,
     )
 
@@ -100,7 +105,8 @@ def list_test_history(id, page=1, count=20):
         sk = item.get("SK", "")
         item["markerId"] = sk.split("#")[1] if "#" in sk else sk
 
-    total, testHistories = paginate(items, page, count, sort_by="id")
+    total, testHistories = paginate(items, page, count, sort_by="createdAt")
+
     return {
         "total": total,
         "testHistories": testHistories,
@@ -114,9 +120,9 @@ def get_test_history(id: str):
 
     try:
         response = table.query(
-            KeyConditionExpression=Key('PK').eq(f"{ENTITY_TYPE.TEST.value}#{id}")
+            KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST.value}#{id}")
         )
-        items = response.get('Items', [])
+        items = response.get("Items", [])
 
         if items:
             item = items[0]
@@ -135,15 +141,47 @@ def get_test_history(id: str):
         return None
 
 
-
 @router.route(field_name="startSingleTest")
 def start_single_task(**args):
     """Start single test task"""
-    project_name = args.get("projectName")
-    marker = args.get("marker")
-    params = args.get("parameters")
+    marker_id = args.get("markerId")
+    parameters = args.get("parameters")
+    parameters_parsed = []
+    if parameters:
+        for param in parameters:
+            parameter_key = param.get("parameterKey")
+            parameter_value = param.get("parameterValue")
+            if parameter_key and parameter_value:
+                parameters_parsed.append(
+                    {"parameterKey": parameter_key, "parameterValue": parameter_value}
+                )
 
-    logger.info(
-        f"Start single test task {project_name} with marker {marker} and parameters {params}"
-    )
-    pass
+    current_timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    pk_id = str(uuid.uuid4())
+    ddb_data = {
+        "PK": f"{ENTITY_TYPE.TEST.value}#{pk_id}",
+        "SK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
+        "createdAt": current_timestamp,
+        "updatedAt": current_timestamp,
+        "duration": random.randint(100, 1000),
+        "metaData": {
+            "accountId": "691546483958",
+            "region": "ap-northeast-1",
+            "stackName": "clo-auto-test",
+        },
+        "parameters": parameters_parsed,
+        "result": {
+            "message": "assert False in [True, True, True, True, True]",
+            "trace": "api_client = <API.apis.ApiFactory object at 0x10b07fdf0>\n @pytest.mark.test\n def test_tmp(api_client):\n re = api_client.ping_services(‘sa-east-1’, ‘emr-serverless,msk,quicksight,redshift-serverless,global-accelerator’)\n tmp = [each[‘available’] for each in re[‘data’]]\n print(tmp)\n> assert False in tmp\nE assert False in [True, True, True, True, True]\ncases/test_data_ingestion.py:196: AssertionError",
+        },
+        "status": random.choice(["RUNNING", "PASS", "FAILED"]),
+    }
+
+    response = table.put_item(Item=ddb_data)
+
+    if response:
+        print(f"Data written to DDB successfully. PK: {ddb_data['PK']}")
+        return pk_id
+    else:
+        print("Failed to write data to DDB.")
+        return None

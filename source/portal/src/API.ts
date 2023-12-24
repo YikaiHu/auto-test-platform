@@ -25,7 +25,7 @@ export type CheckPoint = {
 
 export enum CheckPointStatus {
   PASS = "PASS",
-  CREATING = "CREATING",
+  RUNNING = "RUNNING",
   FAILED = "FAILED",
   ERROR = "ERROR",
   UNKNOWN = "UNKNOWN",
@@ -70,8 +70,7 @@ export type MetaData = {
 };
 
 export type StartSingleTestMutationVariables = {
-  projectName: string,
-  marker: string,
+  markerId: string,
   parameters?: Array< ParameterInput | null > | null,
 };
 
