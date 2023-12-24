@@ -4,12 +4,13 @@
 import logging
 import os
 import json
+from enum import Enum
 
 from boto3.dynamodb.conditions import Attr
 
 from commonlib import AWSConnection, handle_error, AppSyncRouter
-from commonlib import DynamoDBUtil
-from commonlib.utils import paginate
+
+import boto3
 
 
 logger = logging.getLogger()
@@ -19,7 +20,10 @@ conn = AWSConnection()
 router = AppSyncRouter()
 
 table_name = os.environ.get("TABLE")
-ddb_util = DynamoDBUtil(table_name)
+# ddb_util = DynamoDBUtil(table_name)
+
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(table_name)
 
 
 current_region = os.environ.get("REGION")
@@ -81,3 +85,51 @@ def get_test_result(task_name: str):
     """Get test result"""
     logger.info(f" Get test result {task_name}")
     pass
+
+
+class ENTITY_TYPE(Enum):
+    MARKER = "MARKER"
+    PROJECT = "PROJECT"
+
+
+def read_marker(marker_id, project_id):
+    response = table.get_item(
+        Key={
+            "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
+            "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
+        }
+    )
+    return response.get("Item")
+
+
+# Example usage
+marker = read_marker("marker123", "project456")
+print(marker)
+
+
+def create_marker(marker_id, project_id, additional_attributes):
+    item = {
+        "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
+        "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
+        **additional_attributes,
+    }
+    table.put_item(Item=item)
+
+
+# Example usage
+create_marker(
+    "marker123", "project456", {"attribute1": "value1", "attribute2": "value2"}
+)
+
+
+def list_markers_by_project(project_id):
+    response = table.query(
+        IndexName='projectLookup',  # Replace with your GSI name if different
+        KeyConditionExpression=boto3.dynamodb.conditions.Key('PK').eq(f'{ENTITY_TYPE.PROJECT.value}#{project_id}')
+    )
+    return response.get('Items', [])
+
+# Example usage
+markers = list_markers_by_project('project456')
+for marker in markers:
+    print(marker)
