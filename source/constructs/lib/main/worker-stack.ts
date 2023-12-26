@@ -23,10 +23,6 @@ export class WorkerStack extends Construct {
         type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
         value: props.centralBucket.bucketName,
       },
-      MY_ENV_VAR_2: {
-        type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-        value: "value2",
-      },
     };
 
     const codeBuildRole = new iam.Role(this, "CodebuildRole", {
@@ -44,40 +40,42 @@ export class WorkerStack extends Construct {
         buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         environmentVariables: environmentVariables,
       },
-      buildSpec: codebuild.BuildSpec.fromObject({
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml({
         version: "0.2",
         phases: {
           install: {
             commands: [
-              'echo "git clone"',
-              "git clone --depth=1 --branch=${branch} ${code_commit_repo}",
-              "export DIR=$PWD",
-              'last_segment=$(echo "$code_commit_repo" | awk -F "/" "{print $NF}")',
-              'echo "$last_segment"',
-              'export TESTDIR=$DIR/"$last_segment"',
-              "echo $TESTDIR",
-              "cd $TESTDIR",
-              'echo "pip install"',
-              "echo $(python3 --version)",
-              "echo $(pip3 --version)",
-              "pip3 install -r requirements.txt",
-            ],
-          },
+              'echo \"git clone\"',
+              "git config --global credential.helper '!aws codecommit credential-helper $@'",
+              "git config --global credential.UseHttpPath true",
+              'git clone --depth=1 --branch=${branch} ${code_commit_repo}',
+              'export DIR=$PWD',
+              "last_segment=$(echo \"$code_commit_repo\" | awk -F '/' '{print $NF}')",
+              'echo \"$last_segment\"',
+              'export TESTDIR=$DIR/\"$last_segment\"',
+              'echo $TESTDIR',
+              'cd $TESTDIR',
+              'echo \"pip install\"',
+              'echo $(python3 --version)',
+              'echo $(pip3 --version)',
+              'pip3 install -r requirements.txt'
+              ]
+            },
 
-          build: {
-            commands: [
-              'echo "start tests"', // Your build commands go here
-              'sh start_test_autotest_platform.sh "$mark" "$parameter" "$region"',
+            build: {
+              commands: [
+                'echo \"start tests\"', // Your build commands go here
+                'sh start_test_autotest_platform.sh \"$mark\" \"$parameter\" \"$region\"'
+              ],
+            },
+            post_build: {
+              commands: [
+                'current_time=$(date +\"%H-%M-%S\")',
+                'RESULTS_FILE_NAME=\"${project_name}-${mark}-${current_time}.json\"',
+                `aws s3 cp test-report.json s3://${props.centralBucket.bucketName}/$project_name/$mark/$RESULTS_FILE_NAME`, // Upload files from 'testResult' to S3
             ],
-          },
-        },
-        post_build: {
-          commands: [
-            'current_time=$(date +"%H-%M-%S")',
-            'RESULTS_FILE_NAME="${project_name}-${mark}-${current_time}.json"',
-            `aws s3 cp test-report.json s3://${props.centralBucket.bucketName}/$project_name/$mark/$RESULTS_FILE_NAME`, // Upload files from 'testResult' to S3
-          ],
-        },
+          }
+        }
       }),
     });
     props.centralBucket.grantReadWrite(this.codeBuildProject);

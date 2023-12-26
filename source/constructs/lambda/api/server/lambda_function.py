@@ -172,7 +172,7 @@ def update_environment_variables(codebuild_project, environment_variables):
         name=codebuild_project,
         environment={
             'type': 'LINUX_CONTAINER',
-            'image': 'string',
+            'image': 'aws/codebuild/standard:5.0',
             'imagePullCredentialsType': 'CODEBUILD',
             'computeType': 'BUILD_GENERAL1_SMALL',
             'environmentVariables': current_environment_variables
@@ -228,7 +228,7 @@ def start_single_task(**args):
         "SK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
         "createdAt": current_timestamp,
         "updatedAt": current_timestamp,
-        "duration": random.randint(100, 1000),
+        "duration": 0,
         "metaData": {
             "accountId": "691546483958",
             "region": "ap-northeast-1",
