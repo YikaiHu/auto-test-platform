@@ -59,7 +59,6 @@ def list_test_checkpoints(page=1, count=20):
 
     response = table.scan(
         FilterExpression=Attr("PK").begins_with(f"{ENTITY_TYPE.MARKER.value}#"),
-        Limit=count,
     )
 
     items = response.get("Items", [])
