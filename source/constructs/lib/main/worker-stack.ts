@@ -72,6 +72,7 @@ export class WorkerStack extends Construct {
               commands: [
                 'current_time=$(date +\"%H-%M-%S\")',
                 'RESULTS_FILE_NAME=\"${project_name}-${mark}-${current_time}.json\"',
+                "jq -r '.pk = \"$pk\" | .sk = \"$sk\"' test-report.json > tmp.json && mv tmp.json test-report.json",
                 `aws s3 cp test-report.json s3://${props.centralBucket.bucketName}/$project_name/$mark/$RESULTS_FILE_NAME`, // Upload files from 'testResult' to S3
             ],
           }
