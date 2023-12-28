@@ -13,7 +13,7 @@ import ValueWithLabel from "components/ValueWithLabel";
 import { appSyncRequestQuery } from "assets/js/request";
 import { getTestHistory } from "graphql/queries";
 import { TestHistory } from "API";
-
+import ExtLink from "components/ExtLink";
 
 const TestDetails: React.FC = () => {
   const { id } = useParams();
@@ -25,14 +25,12 @@ const TestDetails: React.FC = () => {
     { name: "Check Points", link: "/integration-test/checkpoints" },
     {
       name: testHistory?.markerId || "",
-      link:
-        "/integration-test/checkpoints/history/" + testHistory?.markerId,
+      link: "/integration-test/checkpoints/history/" + testHistory?.markerId,
     },
     {
       name: id || "",
     },
   ];
-
 
   useEffect(() => {
     asyncGetTestHistory();
@@ -46,8 +44,7 @@ const TestDetails: React.FC = () => {
       const resData: any = await appSyncRequestQuery(getTestHistory, {
         id: id,
       });
-      const testHistory: TestHistory =
-        resData.data.getTestHistory;
+      const testHistory: TestHistory = resData.data.getTestHistory;
       setTestHistory(testHistory);
     } catch (error) {
       console.error(error);
@@ -72,28 +69,87 @@ const TestDetails: React.FC = () => {
               <div className="flex value-label-span">
                 <div className="flex-1">
                   <ValueWithLabel label="AccountID">
-                    <div>{testHistory ? testHistory.metaData?.accountId : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.accountId
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
                   </ValueWithLabel>
                   <ValueWithLabel label="Region">
-                    <div>{testHistory ? testHistory.metaData?.region : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.region
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
                   </ValueWithLabel>
                 </div>
                 <div className="flex-1">
                   <ValueWithLabel label="Stack Name">
-                    <div>{testHistory ? testHistory.metaData?.stackName : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.stackName
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                  <ValueWithLabel label="CodeBuild Project">
+                    <div>
+                      {testHistory &&
+                      testHistory.metaData &&
+                      testHistory.codeBuildArn ? (
+                        <ExtLink
+                          to={`https://${
+                            testHistory.metaData.region
+                          }.console.aws.amazon.com/codesuite/codebuild/${
+                            testHistory.metaData.accountId
+                          }/projects/${
+                            testHistory.codeBuildArn.split(":")[5]
+                          }/build/${encodeURIComponent(
+                            testHistory.codeBuildArn
+                          )}/?region=${testHistory.metaData.region}`}
+                        >
+                          {"Click to Open Link"}
+                        </ExtLink>
+                      ) : (
+                        <span>{"-"}</span>
+                      )}
+                    </div>
                   </ValueWithLabel>
                 </div>
                 <div className="flex-1">
                   <ValueWithLabel label="Created">
-                    <div>{testHistory ? formatLocalTime(testHistory.createdAt || "") : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        formatLocalTime(testHistory.createdAt || "")
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
                   </ValueWithLabel>
                   <ValueWithLabel label="Duration">
-                    <div>{testHistory ? testHistory.duration : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        testHistory.duration
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
                   </ValueWithLabel>
                 </div>
                 <div className="flex-1">
                   <ValueWithLabel label="Status">
-                    <div>{testHistory ? <Status status={testHistory.status || "-"} /> : <Status status="Loading" />}</div>
+                    <div>
+                      {testHistory ? (
+                        <Status status={testHistory.status || "-"} />
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
                   </ValueWithLabel>
                 </div>
               </div>
@@ -101,13 +157,18 @@ const TestDetails: React.FC = () => {
                 <div className="flex-1">
                   <ValueWithLabel label="Parameters">
                     <div>
-                      {
-                        testHistory?.parameters && testHistory.parameters.length > 0
-                          ? testHistory.parameters
-                            .map(param => param ? `${param.parameterKey}: ${param.parameterValue}` : '')
-                            .join(', ')
-                          : <Status status="Loading" />
-                      }
+                      {testHistory?.parameters &&
+                      testHistory.parameters.length > 0 ? (
+                        testHistory.parameters
+                          .map((param) =>
+                            param
+                              ? `${param.parameterKey}: ${param.parameterValue}`
+                              : ""
+                          )
+                          .join(", ")
+                      ) : (
+                        <Status status="Loading" />
+                      )}
                     </div>
                   </ValueWithLabel>
                 </div>
@@ -119,16 +180,21 @@ const TestDetails: React.FC = () => {
                 <div>
                   <div>
                     <h6>Test Trace</h6>
-                    <CodeCopy loading={false} code={testHistory?.result?.trace || ''} />
+                    <CodeCopy
+                      loading={false}
+                      code={testHistory?.result?.trace || ""}
+                    />
                   </div>
                   <div>
                     <h6>Test Log</h6>
-                    <CodeCopy loading={false} code={testHistory?.result?.message || ''} />
+                    <CodeCopy
+                      loading={false}
+                      code={testHistory?.result?.message || ""}
+                    />
                   </div>
                 </div>
               </HeaderPanel>
             </div>
-
           </div>
         </div>
       </div>

@@ -45,6 +45,7 @@ export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $p
         message
         __typename
       }
+      codeBuildArn
       metaData {
         accountId
         region
@@ -78,6 +79,7 @@ export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!) {
       message
       __typename
     }
+    codeBuildArn
     metaData {
       accountId
       region

@@ -47,10 +47,11 @@ type TestHistory {
   id: ID!
   markerId: String
   createdAt: String
-  duration: Int
+  duration: String
   status: CheckPointStatus
   parameters: [Parameters]
   result: TestResult
+  codeBuildArn: String
   metaData: MetaData
 }
 
