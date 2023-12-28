@@ -187,7 +187,7 @@ def start_single_task(**args):
     """Start single test task"""
     marker_id = args.get("markerId")
     parameters = args.get("parameters")
-    
+    pk_id = str(uuid.uuid4())
     search_response = table.query(
             KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
         )
@@ -201,10 +201,11 @@ def start_single_task(**args):
     branch = metadata_json[project_name]['branch']
     region = metadata_json[project_name]['region']
     parameters_parsed = []
-    
+
     environment_variables = [{'name': 'code_commit_repo', 'value': codecommit_repo}, {'name': 'branch', 'value': branch}, 
     {'name': 'mark', 'value': mark}, {'name': 'parameter', 'value': f'{codebuild_params_list}'}, 
-    {'name': 'region', 'value': region}, {'name': 'project_name', 'value': project_name}]
+    {'name': 'region', 'value': region}, {'name': 'project_name', 'value': project_name}, 
+    {'name': 'pk', 'value': f"{ENTITY_TYPE.TEST.value}#{pk_id}"}, {'name': 'sk', 'value': f"{ENTITY_TYPE.MARKER.value}#{marker_id}"}]
     
     update_environment_variables(codebuild_project, environment_variables)
     start_build_response = codebuild_client.start_build(projectName=codebuild_project)
@@ -222,7 +223,6 @@ def start_single_task(**args):
                 )
     
     current_timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    pk_id = str(uuid.uuid4())
     ddb_data = {
         "PK": f"{ENTITY_TYPE.TEST.value}#{pk_id}",
         "SK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
