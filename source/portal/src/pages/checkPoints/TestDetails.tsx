@@ -51,6 +51,33 @@ const TestDetails: React.FC = () => {
     }
   };
 
+  const generateCodeBuildLink = (testHistory: TestHistory) => {
+    if (!testHistory.metaData || !testHistory.codeBuildArn) {
+      return "";
+    }
+
+    const arnParts = testHistory.codeBuildArn.split(":");
+    const buildPart = arnParts.find((part) => part.startsWith("build/"));
+
+    if (!buildPart) {
+      return "";
+    }
+
+    const projectName = buildPart.split("/")[1];
+    const region = testHistory.metaData.region;
+    const accountId = testHistory.metaData.accountId;
+
+    const buildIndex = arnParts.findIndex((part) => part.startsWith("build/"));
+    const buildDetails = arnParts
+      .slice(buildIndex)
+      .join(":")
+      .substring("build/".length);
+
+    const encodedBuildDetails = encodeURIComponent(buildDetails);
+
+    return `https://${region}.console.aws.amazon.com/codesuite/codebuild/${accountId}/projects/${projectName}/build/${encodedBuildDetails}`;
+  };
+
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
   const handleTrigger = (buffer: string, logType: string) => {
@@ -102,17 +129,7 @@ const TestDetails: React.FC = () => {
                       {testHistory &&
                       testHistory.metaData &&
                       testHistory.codeBuildArn ? (
-                        <ExtLink
-                          to={`https://${
-                            testHistory.metaData.region
-                          }.console.aws.amazon.com/codesuite/codebuild/${
-                            testHistory.metaData.accountId
-                          }/projects/${
-                            testHistory.codeBuildArn.split(":")[5]
-                          }/build/${encodeURIComponent(
-                            testHistory.codeBuildArn
-                          )}/?region=${testHistory.metaData.region}`}
-                        >
+                        <ExtLink to={generateCodeBuildLink(testHistory)}>
                           {"Click to Open Link"}
                         </ExtLink>
                       ) : (
