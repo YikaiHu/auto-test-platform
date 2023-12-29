@@ -229,6 +229,7 @@ def start_single_task(**args):
 
     update_environment_variables(codebuild_project, environment_variables)
     start_build_response = codebuild_client.start_build(projectName=codebuild_project)
+    codebuild_arn = start_build_response['build']['arn']
 
     print("CodeBuild triggered:", start_build_response)
 
@@ -256,6 +257,7 @@ def start_single_task(**args):
         "parameters": parameters_parsed,
         "result": {},
         "status": "RUNNING",
+        "codeBuildArn": codebuild_arn
     }
 
     response = table.put_item(Item=ddb_data)
