@@ -50,7 +50,7 @@ type TestHistory {
   duration: String
   status: CheckPointStatus
   parameters: [Parameters]
-  result: TestResult
+  result: [TestResult]
   codeBuildArn: String
   metaData: MetaData
 }

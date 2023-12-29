@@ -46,7 +46,7 @@ export type TestHistory = {
   duration?: string | null,
   status?: CheckPointStatus | null,
   parameters?:  Array<Parameters | null > | null,
-  result?: TestResult | null,
+  result?:  Array<TestResult | null > | null,
   codeBuildArn?: string | null,
   metaData?: MetaData | null,
 };
@@ -121,11 +121,11 @@ export type ListTestHistoryQuery = {
         parameterKey?: string | null,
         parameterValue?: string | null,
       } | null > | null,
-      result?:  {
+      result?:  Array< {
         __typename: "TestResult",
         trace?: string | null,
         message?: string | null,
-      } | null,
+      } | null > | null,
       codeBuildArn?: string | null,
       metaData?:  {
         __typename: "MetaData",
@@ -155,11 +155,11 @@ export type GetTestHistoryQuery = {
       parameterKey?: string | null,
       parameterValue?: string | null,
     } | null > | null,
-    result?:  {
+    result?:  Array< {
       __typename: "TestResult",
       trace?: string | null,
       message?: string | null,
-    } | null,
+    } | null > | null,
     codeBuildArn?: string | null,
     metaData?:  {
       __typename: "MetaData",

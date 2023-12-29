@@ -195,20 +195,27 @@ const TestDetails: React.FC = () => {
             <div>
               <HeaderPanel title={"Test Details"}>
                 <div>
-                  <div>
-                    <h6>Test Trace</h6>
-                    <CodeCopy
-                      loading={false}
-                      code={testHistory?.result?.trace || ""}
-                    />
-                  </div>
-                  <div>
-                    <h6>Test Log</h6>
-                    <CodeCopy
-                      loading={false}
-                      code={testHistory?.result?.message || ""}
-                    />
-                  </div>
+                  {testHistory?.result?.map(
+                    (resultItem, index) =>
+                      resultItem && (
+                        <React.Fragment key={index}>
+                          <div>
+                            <h6>Test Trace {index + 1}</h6>
+                            <CodeCopy
+                              loading={false}
+                              code={resultItem.trace || ""}
+                            />
+                          </div>
+                          <div>
+                            <h6>Test Log {index + 1}</h6>
+                            <CodeCopy
+                              loading={false}
+                              code={resultItem.message || ""}
+                            />
+                          </div>
+                        </React.Fragment>
+                      )
+                  )}
                 </div>
               </HeaderPanel>
             </div>
