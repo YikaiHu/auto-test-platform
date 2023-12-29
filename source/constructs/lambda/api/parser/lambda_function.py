@@ -5,6 +5,7 @@ import logging
 import os
 import json
 import boto3
+from datetime import datetime
 
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
@@ -12,7 +13,7 @@ dynamodb = boto3.resource("dynamodb")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-ddb_table_name = os.environ["DDB_TABLE_NAME"]
+ddb_table_name = os.environ["TABLE"]
 ddb_table = dynamodb.Table(ddb_table_name)
 
 
@@ -25,6 +26,7 @@ def lambda_handler(event, context):
             response = s3.get_object(Bucket=bucket, Key=key)
             test_result = response["Body"].read().decode("utf-8")
             parsed_data = json.loads(test_result)
+            print(parsed_data)
             pk = parsed_data['pk']
             sk = parsed_data['sk']
             parsed_result = parse_test_result(parsed_data)          
@@ -39,16 +41,16 @@ def lambda_handler(event, context):
                 '#result': 'result'}
             update_expression = 'SET #status = :value1, #failed = :value2, #passed = :value3, #total = :value4, #updatedAt = :value5, #duration = :value6, #result = :value7'
             expression_attribute_values = {
-                ':new_value1': parsed_result['status'], 
-                ':new_value2': parsed_result['failed']
-                ':new_value3': parsed_result['passed']
-                ':new_value4': parsed_result['total']
-                ':new_value5': parsed_result['updatedAt']
-                ':new_value6': parsed_result['duration']
-                ':new_value7': parsed_result['result']}
+                ':value1': parsed_result['status'], 
+                ':value2': parsed_result['failed'],
+                ':value3': parsed_result['passed'],
+                ':value4': parsed_result['total'],
+                ':value5': parsed_result['updatedAt'],
+                ':value6': parsed_result['duration'],
+                ':value7': parsed_result['result']}
 
             response = ddb_table.update_item(
-                TableName=table_name,
+                # TableName=table_name,
                 Key={'PK': pk, 'SK': sk},
                 UpdateExpression=update_expression,
                 ExpressionAttributeValues=expression_attribute_values,
@@ -77,7 +79,7 @@ def parse_test_result(parsed_data):
         ddb_data['passed'] = 0
     ddb_data['total'] = summary_result['total']
     if ddb_data['total'] == ddb_data['passed']:
-        ddb_data['status'] = 'PASSED'
+        ddb_data['status'] = 'PASS'
     else:
         ddb_data['status'] = 'FAILED'
     ddb_data['updatedAt'] = current_timestamp
@@ -85,7 +87,7 @@ def parse_test_result(parsed_data):
     results = []
     for each in test_detail:
         result = {}
-        node_id = each['node_id']
+        node_id = each['nodeid']
         call = each['call']
         outcome = call['outcome']
         if 'crash' in call.keys():

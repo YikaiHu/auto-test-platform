@@ -187,7 +187,7 @@ export class ServiceStack extends Construct {
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(testResultParser),
       {
-        prefix: '/',
+        prefix: '',
       }
     );
   }
