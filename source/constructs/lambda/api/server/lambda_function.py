@@ -255,7 +255,6 @@ def start_single_task(**args):
             "stackName": "clo-auto-test",
         },
         "parameters": parameters_parsed,
-        "result": {},
         "status": "RUNNING",
         "codeBuildArn": codebuild_arn
     }
