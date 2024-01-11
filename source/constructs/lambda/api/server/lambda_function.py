@@ -3,15 +3,31 @@
 
 import logging
 import os
-import json
+from datetime import datetime
+import uuid
 from enum import Enum
 
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 
 from commonlib import AWSConnection, handle_error, AppSyncRouter
+from commonlib.utils import paginate
 
 import boto3
 
+
+class ENTITY_TYPE(Enum):
+    MARKER = "MARKER"
+    PROJECT = "PROJECT"
+    TEST = "TEST"
+
+
+metadata_json = {
+    "CLO": {
+        "region": "ap-northeast-1",
+        "branch": "develop",
+        "codecommit_repo": "https://git-codecommit.us-west-2.amazonaws.com/v1/repos/Loghub-test",
+    }
+}
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -20,29 +36,18 @@ conn = AWSConnection()
 router = AppSyncRouter()
 
 table_name = os.environ.get("TABLE")
-# ddb_util = DynamoDBUtil(table_name)
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(table_name)
-
-
+codebuild_project = os.environ.get("CODEBUILD_PROJECT_NAME")
 current_region = os.environ.get("REGION")
 current_partition = os.environ.get("PARTITION")
+codebuild_client = boto3.client("codebuild", region_name=current_region)
 
 
 @handle_error
 def lambda_handler(event, _):
     return router.resolve(event)
-
-
-@router.route(field_name="getTestCheckPoint")
-def get_test_checkpoint(id: str):
-    """Get a service pipeline detail"""
-    pk = "TEST_CHECKPOINT"
-    sk = f"TEST_CHECKPOINT_ID#{id}"
-    item = ddb_util.get_item({"PK": pk, "SK": sk})
-
-    return item
 
 
 @router.route(field_name="listTestCheckPoints")
@@ -52,13 +57,31 @@ def list_test_checkpoints(page=1, count=20):
         f"List TestCheckPoints from JSON file in page {page} with {count} of records"
     )
 
-    with open("test_tasks.json", "r") as json_file:
-        items = json.load(json_file)
+    response = table.scan(
+        FilterExpression=Attr("PK").begins_with(f"{ENTITY_TYPE.MARKER.value}#"),
+    )
+
+    items = response.get("Items", [])
+    total = response.get("Count", 0)
 
     for item in items:
-        # Here we set the status to UNKNOWN for all test checkpoints
-        # we will get these status from DynamoDB
-        item["status"] = "UNKNOWN"
+        pk = item.get("PK", "")
+        item["id"] = pk.split("#")[1] if "#" in pk else pk
+
+        history_response = table.query(
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(
+                f"{ENTITY_TYPE.MARKER.value}#{item['id']}"
+            ),
+            ScanIndexForward=False,
+            Limit=1,
+        )
+
+        latest_test = history_response.get("Items", [])
+        if latest_test:
+            item["status"] = latest_test[0].get("status", "UNKNOWN")
+        else:
+            item["status"] = "UNKNOWN"
 
     total, checkPoints = paginate(items, page, count, sort_by="id")
     return {
@@ -67,69 +90,180 @@ def list_test_checkpoints(page=1, count=20):
     }
 
 
+@router.route(field_name="listTestHistory")
+def list_test_history(id, page=1, count=20):
+    """List test history"""
+    logger.info(f"List history from JSON file in page {page} with {count} of records")
+
+    response = table.query(
+        IndexName="sortCreatedAtIndex",
+        KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{id}"),
+        ScanIndexForward=False,
+    )
+
+    items = response.get("Items", [])
+    total = response.get("Count", 0)
+
+    for item in items:
+        pk = item.get("PK", "")
+        item["id"] = pk.split("#")[1] if "#" in pk else pk
+        sk = item.get("SK", "")
+        item["markerId"] = sk.split("#")[1] if "#" in sk else sk
+
+    total, testHistories = paginate(items, page, count, sort_by="createdAt")
+
+    return {
+        "total": total,
+        "testHistories": testHistories,
+    }
+
+
+@router.route(field_name="getTestHistory")
+def get_test_history(id: str):
+    """Get test history for a given ID."""
+    logger.info(f"Get test history for ID: {id}")
+
+    try:
+        response = table.query(
+            KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST.value}#{id}")
+        )
+        items = response.get("Items", [])
+
+        if items:
+            item = items[0]
+            pk = item.get("PK", "")
+            item["id"] = pk.split("#")[1] if "#" in pk else pk
+            sk = item.get("SK", "")
+            item["markerId"] = sk.split("#")[1] if "#" in sk else sk
+
+            return item
+        else:
+            logger.info(f"No test history found for ID: {id}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error fetching test history: {e}")
+        return None
+
+
+def pass_parameters_to_codebuild(parameters, project_name):
+    codebuild_params_json = {}
+    if project_name == "CLO":
+        for param in parameters:
+            parameter_key = param.get("parameterKey")
+            parameter_value = param.get("parameterValue")
+            if parameter_key == "buffer":
+                codebuild_params_json["buffer_layer"] = parameter_value
+            if parameter_key == "logType":
+                codebuild_params_json["log_type"] = parameter_value
+    codebuild_params_list = [codebuild_params_json]
+    return codebuild_params_list
+
+
+def update_environment_variables(codebuild_project, environment_variables):
+    project_info = codebuild_client.batch_get_projects(names=[codebuild_project])
+    current_environment_variables = project_info["projects"][0]["environment"][
+        "environmentVariables"
+    ]
+    for variable in environment_variables:
+        variable_name = variable["name"]
+        variable_value = variable["value"]
+
+        existing_variable = next(
+            (
+                var
+                for var in current_environment_variables
+                if var["name"] == variable_name
+            ),
+            None,
+        )
+        if existing_variable:
+            existing_variable["value"] = variable_value
+        else:
+            current_environment_variables.append(
+                {"name": variable_name, "value": variable_value}
+            )
+    response = codebuild_client.update_project(
+        name=codebuild_project,
+        environment={
+            "type": "LINUX_CONTAINER",
+            "image": "aws/codebuild/standard:5.0",
+            "imagePullCredentialsType": "CODEBUILD",
+            "computeType": "BUILD_GENERAL1_SMALL",
+            "environmentVariables": current_environment_variables,
+        },
+    )
+    print(response)
+
+
 @router.route(field_name="startSingleTest")
 def start_single_task(**args):
     """Start single test task"""
-    project_name = args.get("projectName")
-    marker = args.get("marker")
-    params = args.get("parameters")
-
-    logger.info(
-        f"Start single test task {project_name} with marker {marker} and parameters {params}"
+    marker_id = args.get("markerId")
+    parameters = args.get("parameters")
+    pk_id = str(uuid.uuid4())
+    search_response = table.query(
+        KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
     )
-    pass
+    items = search_response.get("Items", [])
+    if items:
+        item = items[0]
+        mark = item.get("modelName", "")
+        project_name = item.get("projectName", "")
+    codebuild_params_list = pass_parameters_to_codebuild(parameters, project_name)
+    codecommit_repo = metadata_json[project_name]["codecommit_repo"]
+    branch = metadata_json[project_name]["branch"]
+    region = metadata_json[project_name]["region"]
+    parameters_parsed = []
 
+    environment_variables = [
+        {"name": "code_commit_repo", "value": codecommit_repo},
+        {"name": "branch", "value": branch},
+        {"name": "mark", "value": mark},
+        {"name": "parameter", "value": f"{codebuild_params_list}"},
+        {"name": "region", "value": region},
+        {"name": "project_name", "value": project_name},
+        {"name": "pk", "value": f"{ENTITY_TYPE.TEST.value}#{pk_id}"},
+        {"name": "sk", "value": f"{ENTITY_TYPE.MARKER.value}#{marker_id}"},
+    ]
 
-@router.route(field_name="getTestResult")
-def get_test_result(task_name: str):
-    """Get test result"""
-    logger.info(f" Get test result {task_name}")
-    pass
+    update_environment_variables(codebuild_project, environment_variables)
+    start_build_response = codebuild_client.start_build(projectName=codebuild_project)
+    codebuild_arn = start_build_response['build']['arn']
 
+    print("CodeBuild triggered:", start_build_response)
 
-class ENTITY_TYPE(Enum):
-    MARKER = "MARKER"
-    PROJECT = "PROJECT"
+    if parameters:
+        for param in parameters:
+            parameter_key = param.get("parameterKey")
+            parameter_value = param.get("parameterValue")
+            if parameter_key and parameter_value:
+                parameters_parsed.append(
+                    {"parameterKey": parameter_key, "parameterValue": parameter_value}
+                )
 
-
-def read_marker(marker_id, project_id):
-    response = table.get_item(
-        Key={
-            "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
-            "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
-        }
-    )
-    return response.get("Item")
-
-
-# Example usage
-marker = read_marker("marker123", "project456")
-print(marker)
-
-
-def create_marker(marker_id, project_id, additional_attributes):
-    item = {
-        "PK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
-        "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
-        **additional_attributes,
+    current_timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    ddb_data = {
+        "PK": f"{ENTITY_TYPE.TEST.value}#{pk_id}",
+        "SK": f"{ENTITY_TYPE.MARKER.value}#{marker_id}",
+        "createdAt": current_timestamp,
+        "updatedAt": current_timestamp,
+        "duration": "-",
+        "metaData": {
+            "accountId": "691546483958",
+            "region": "ap-northeast-1",
+            "stackName": "clo-auto-test",
+        },
+        "parameters": parameters_parsed,
+        "status": "RUNNING",
+        "codeBuildArn": codebuild_arn
     }
-    table.put_item(Item=item)
 
+    response = table.put_item(Item=ddb_data)
 
-# Example usage
-create_marker(
-    "marker123", "project456", {"attribute1": "value1", "attribute2": "value2"}
-)
-
-
-def list_markers_by_project(project_id):
-    response = table.query(
-        IndexName='projectLookup',  # Replace with your GSI name if different
-        KeyConditionExpression=boto3.dynamodb.conditions.Key('PK').eq(f'{ENTITY_TYPE.PROJECT.value}#{project_id}')
-    )
-    return response.get('Items', [])
-
-# Example usage
-markers = list_markers_by_project('project456')
-for marker in markers:
-    print(marker)
+    if response:
+        print(f"Data written to DDB successfully. PK: {ddb_data['PK']}")
+        return pk_id
+    else:
+        print("Failed to write data to DDB.")
+        return None

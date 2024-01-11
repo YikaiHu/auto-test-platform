@@ -2,6 +2,11 @@
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
 
+export type ParameterInput = {
+  parameterKey?: string | null,
+  parameterValue?: string | null,
+};
+
 export type ListCheckPointResponse = {
   __typename: "ListCheckPointResponse",
   checkPoints?:  Array<CheckPoint | null > | null,
@@ -12,22 +17,67 @@ export type CheckPoint = {
   __typename: "CheckPoint",
   id: string,
   createdAt?: string | null,
+  lastTestedAt?: string | null,
   status?: CheckPointStatus | null,
-  error?: string | null,
-  logLink?: string | null,
-  name?: string | null,
   projectName?: string | null,
   modelName?: string | null,
 };
 
 export enum CheckPointStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  CREATING = "CREATING",
-  DELETING = "DELETING",
+  PASS = "PASS",
+  RUNNING = "RUNNING",
+  FAILED = "FAILED",
   ERROR = "ERROR",
+  UNKNOWN = "UNKNOWN",
 }
 
+
+export type ListTestHistoryResponse = {
+  __typename: "ListTestHistoryResponse",
+  testHistories?:  Array<TestHistory | null > | null,
+  total?: number | null,
+};
+
+export type TestHistory = {
+  __typename: "TestHistory",
+  id: string,
+  markerId?: string | null,
+  createdAt?: string | null,
+  duration?: string | null,
+  status?: CheckPointStatus | null,
+  parameters?:  Array<Parameters | null > | null,
+  result?:  Array<TestResult | null > | null,
+  codeBuildArn?: string | null,
+  metaData?: MetaData | null,
+};
+
+export type Parameters = {
+  __typename: "Parameters",
+  parameterKey?: string | null,
+  parameterValue?: string | null,
+};
+
+export type TestResult = {
+  __typename: "TestResult",
+  trace?: string | null,
+  message?: string | null,
+};
+
+export type MetaData = {
+  __typename: "MetaData",
+  accountId?: string | null,
+  region?: string | null,
+  stackName?: string | null,
+};
+
+export type StartSingleTestMutationVariables = {
+  markerId: string,
+  parameters?: Array< ParameterInput | null > | null,
+};
+
+export type StartSingleTestMutation = {
+  startSingleTest?: string | null,
+};
 
 export type ListTestCheckPointsQueryVariables = {
   page?: number | null,
@@ -41,10 +91,8 @@ export type ListTestCheckPointsQuery = {
       __typename: "CheckPoint",
       id: string,
       createdAt?: string | null,
+      lastTestedAt?: string | null,
       status?: CheckPointStatus | null,
-      error?: string | null,
-      logLink?: string | null,
-      name?: string | null,
       projectName?: string | null,
       modelName?: string | null,
     } | null > | null,
@@ -52,20 +100,72 @@ export type ListTestCheckPointsQuery = {
   } | null,
 };
 
-export type GetTestCheckPointQueryVariables = {
+export type ListTestHistoryQueryVariables = {
+  id: string,
+  page?: number | null,
+  count?: number | null,
+};
+
+export type ListTestHistoryQuery = {
+  listTestHistory?:  {
+    __typename: "ListTestHistoryResponse",
+    testHistories?:  Array< {
+      __typename: "TestHistory",
+      id: string,
+      markerId?: string | null,
+      createdAt?: string | null,
+      duration?: string | null,
+      status?: CheckPointStatus | null,
+      parameters?:  Array< {
+        __typename: "Parameters",
+        parameterKey?: string | null,
+        parameterValue?: string | null,
+      } | null > | null,
+      result?:  Array< {
+        __typename: "TestResult",
+        trace?: string | null,
+        message?: string | null,
+      } | null > | null,
+      codeBuildArn?: string | null,
+      metaData?:  {
+        __typename: "MetaData",
+        accountId?: string | null,
+        region?: string | null,
+        stackName?: string | null,
+      } | null,
+    } | null > | null,
+    total?: number | null,
+  } | null,
+};
+
+export type GetTestHistoryQueryVariables = {
   id: string,
 };
 
-export type GetTestCheckPointQuery = {
-  getTestCheckPoint?:  {
-    __typename: "CheckPoint",
+export type GetTestHistoryQuery = {
+  getTestHistory?:  {
+    __typename: "TestHistory",
     id: string,
+    markerId?: string | null,
     createdAt?: string | null,
+    duration?: string | null,
     status?: CheckPointStatus | null,
-    error?: string | null,
-    logLink?: string | null,
-    name?: string | null,
-    projectName?: string | null,
-    modelName?: string | null,
+    parameters?:  Array< {
+      __typename: "Parameters",
+      parameterKey?: string | null,
+      parameterValue?: string | null,
+    } | null > | null,
+    result?:  Array< {
+      __typename: "TestResult",
+      trace?: string | null,
+      message?: string | null,
+    } | null > | null,
+    codeBuildArn?: string | null,
+    metaData?:  {
+      __typename: "MetaData",
+      accountId?: string | null,
+      region?: string | null,
+      stackName?: string | null,
+    } | null,
   } | null,
 };

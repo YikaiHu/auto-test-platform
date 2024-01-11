@@ -34,6 +34,10 @@ const CodeCopy: React.FC<CodeCopyProps> = (props: CodeCopyProps) => {
   const [width, setWidth] = useState(0);
   const [menuWidth] = useState(openMenu ? 100 : 300);
 
+  const formatCode = (code: string) => {
+    return { __html: code.replace(/(error)/gi, "<span style='color: red;'>$1</span>") };
+  };
+
   const div = useCallback((node: any) => {
     if (node !== null) {
       setWidth(node.getBoundingClientRect().width - menuWidth);
@@ -58,7 +62,8 @@ const CodeCopy: React.FC<CodeCopyProps> = (props: CodeCopyProps) => {
         className="flex-1"
       >
         <pre className="code">
-          {loading ? <LoadingText /> : <code>{code}</code>}
+          {loading ? <LoadingText /> : <code dangerouslySetInnerHTML={formatCode(code)}></code>
+          }
         </pre>
       </div>
       <div className="ml-10">

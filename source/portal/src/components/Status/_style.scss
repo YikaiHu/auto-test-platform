@@ -17,6 +17,9 @@
     &.created {
       color: green;
     }
+    &.pass {
+      color: green;
+    }
     &.updated {
       color: green;
     }
@@ -76,6 +79,9 @@
     }
     &.timed_out {
       color: #ff9900;
+    }
+    &.pass {
+      color: green;
     }
   }
   &.is-link {

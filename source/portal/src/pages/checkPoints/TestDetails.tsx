@@ -1,36 +1,82 @@
 /* eslint-disable react/display-name */
 import React, { useEffect, useState } from "react";
-import Pagination from "@material-ui/lab/Pagination";
-import Button from "components/Button";
-import { TablePanel } from "components/TablePanel";
 import Breadcrumb from "components/Breadcrumb";
-import { SelectType } from "components/TablePanel/tablePanel";
-import { appSyncRequestQuery } from "assets/js/request";
-import { listTestCheckPoints } from "graphql/queries";
-import { AUTO_REFRESH_INT } from "assets/js/const";
-import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
 import { useTranslation } from "react-i18next";
-import PipelineStatusComp from "./common/PipelineStatus";
-import ButtonRefresh from "components/ButtonRefresh";
-import { CheckPoint, CheckPointStatus } from "API";
 import TriggerDialog from "./TriggerDialog";
-
-const PAGE_SIZE = 10;
+import { useParams } from "react-router-dom";
+import { formatLocalTime } from "assets/js/utils";
+import Status from "components/Status/Status";
+import HeaderPanel from "components/HeaderPanel";
+import CodeCopy from "components/CodeCopy";
+import ValueWithLabel from "components/ValueWithLabel";
+import { appSyncRequestQuery } from "assets/js/request";
+import { getTestHistory } from "graphql/queries";
+import { TestHistory } from "API";
+import ExtLink from "components/ExtLink";
 
 const TestDetails: React.FC = () => {
+  const { id } = useParams();
   const { t } = useTranslation();
+  const [testHistory, setTestHistory] = useState<TestHistory>();
+
   const breadCrumbList = [
     { name: t("name"), link: "/" },
-    { name: t("servicelog:name") },
+    { name: "Check Points", link: "/integration-test/checkpoints" },
+    {
+      name: testHistory?.markerId || "",
+      link: "/integration-test/checkpoints/history/" + testHistory?.markerId,
+    },
+    {
+      name: id || "",
+    },
   ];
 
-  const [loadingData, setLoadingData] = useState(false);
-  const [checkPointsList, setCheckPointsList] = useState<CheckPoint[]>([]);
-  const [selectedCheckPoints, setSelectedCheckPoints] = useState<any[]>([]);
-  const [disabledDetail, setDisabledDetail] = useState(false);
-  const [totoalCount, setTotoalCount] = useState(0);
-  const [curPage, setCurPage] = useState(1);
+  useEffect(() => {
+    asyncGetTestHistory();
+  }, [id]);
+
+  const asyncGetTestHistory = async (hideLoading = false) => {
+    try {
+      if (!hideLoading) {
+        setTestHistory(undefined);
+      }
+      const resData: any = await appSyncRequestQuery(getTestHistory, {
+        id: id,
+      });
+      const testHistory: TestHistory = resData.data.getTestHistory;
+      setTestHistory(testHistory);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const generateCodeBuildLink = (testHistory: TestHistory) => {
+    if (!testHistory.metaData || !testHistory.codeBuildArn) {
+      return "";
+    }
+
+    const arnParts = testHistory.codeBuildArn.split(":");
+    const buildPart = arnParts.find((part) => part.startsWith("build/"));
+
+    if (!buildPart) {
+      return "";
+    }
+
+    const projectName = buildPart.split("/")[1];
+    const region = testHistory.metaData.region;
+    const accountId = testHistory.metaData.accountId;
+
+    const buildIndex = arnParts.findIndex((part) => part.startsWith("build/"));
+    const buildDetails = arnParts
+      .slice(buildIndex)
+      .join(":")
+      .substring("build/".length);
+
+    const encodedBuildDetails = encodeURIComponent(buildDetails);
+
+    return `https://${region}.console.aws.amazon.com/codesuite/codebuild/${accountId}/projects/${projectName}/build/${encodedBuildDetails}`;
+  };
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
@@ -39,165 +85,143 @@ const TestDetails: React.FC = () => {
     setIsTriggerDialogOpen(false);
   };
 
-  // Get Service Log List
-  const getCheckPointsList = async (hideLoading = false) => {
-    try {
-      if (!hideLoading) {
-        setCheckPointsList([]);
-        setSelectedCheckPoints([]);
-        setLoadingData(true);
-      }
-      const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
-        page: curPage,
-        count: PAGE_SIZE,
-      });
-      const dataPipelineList: CheckPoint[] =
-        resData.data.listTestCheckPoints.checkPoints;
-      setTotoalCount(resData.data.listTestCheckPoints.total);
-      setCheckPointsList(dataPipelineList);
-      setLoadingData(false);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handlePageChange = (event: any, value: number) => {
-    setCurPage(value);
-  };
-
-  // Get Service log list when page rendered.
-  useEffect(() => {
-    getCheckPointsList();
-  }, [curPage]);
-
-  // Disable delete button and view detail button when no row selected.
-  useEffect(() => {
-    console.info("selectedCheckPoints:", selectedCheckPoints);
-    if (selectedCheckPoints.length === 1) {
-      setDisabledDetail(false);
-    } else {
-      setDisabledDetail(true);
-    }
-    if (selectedCheckPoints.length > 0) {
-      if (
-        selectedCheckPoints[0].status === CheckPointStatus.ACTIVE ||
-        selectedCheckPoints[0].status === CheckPointStatus.ERROR
-      ) {
-        // setDisabledDelete(false);
-      } else {
-        // setDisabledDelete(true);
-      }
-    } else {
-      // setDisabledDelete(true);
-    }
-  }, [selectedCheckPoints]);
-
-  // Auto Refresh List
-  useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      getCheckPointsList(true);
-    }, AUTO_REFRESH_INT);
-    console.info("refreshInterval:", refreshInterval);
-    return () => clearInterval(refreshInterval);
-  }, [curPage]);
-
-  const renderStatus = (data: CheckPoint) => {
-    return (
-      <PipelineStatusComp
-        status={data.status}
-        stackId={data.id}
-        error={data.error}
-      />
-    );
-  };
-
   return (
     <div className="lh-main-content">
       <SideMenu />
       <div className="lh-container">
         <div className="lh-content">
+          <Breadcrumb list={breadCrumbList} />
           <div className="service-log">
-            <Breadcrumb list={breadCrumbList} />
-            <div className="table-data">
-              <TablePanel
-                trackId="id"
-                defaultSelectItem={selectedCheckPoints}
-                title={"Test Detail"}
-                changeSelected={(item) => {
-                  setSelectedCheckPoints(item);
-                }}
-                loading={loadingData}
-                selectType={SelectType.RADIO}
-                columnDefinitions={[
-                  {
-                    width: 150,
-                    id: "type",
-                    header: t("servicelog:list.projectName"),
-                    cell: (e: CheckPoint) => {
-                      return e.projectName;
-                    },
-                  },
-                  {
-                    width: 150,
-                    id: "account",
-                    header: t("servicelog:list.modelName"),
-                    cell: (e: CheckPoint) => {
-                      return e.modelName;
-                    },
-                  },
-                  {
-                    id: "source",
-                    header: t("servicelog:list.checkPointName"),
-                    cell: (e: CheckPoint) => {
-                      return e.name;
-                    },
-                  },
-                  {
-                    width: 120,
-                    id: "status",
-                    header: t("servicelog:list.status"),
-                    cell: (e: CheckPoint) => renderStatus(e),
-                  },
-                ]}
-                items={checkPointsList}
-                actions={
-                  <div>
-                    <Button
-                      btnType="icon"
-                      disabled={loadingData}
-                      onClick={() => {
-                        if (curPage === 1) {
-                          getCheckPointsList();
-                        } else {
-                          setCurPage(1);
-                        }
-                      }}
-                    >
-                      <ButtonRefresh loading={loadingData} />
-                    </Button>
-                    <Button
-                      loading={disabledDetail}
-                      btnType="primary"
-                      onClick={() => setIsTriggerDialogOpen(true)}
-                    >
-                      {t("button.trigger")}
-                    </Button>
-                  </div>
-                }
-                pagination={
-                  <Pagination
-                    count={Math.ceil(totoalCount / PAGE_SIZE)}
-                    page={curPage}
-                    onChange={handlePageChange}
-                    size="small"
-                  />
-                }
-              />
+            <HeaderPanel title={"Test configuration"}>
+              <div className="flex value-label-span">
+                <div className="flex-1">
+                  <ValueWithLabel label="AccountID">
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.accountId
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                  <ValueWithLabel label="Region">
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.region
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                </div>
+                <div className="flex-1">
+                  <ValueWithLabel label="Stack Name">
+                    <div>
+                      {testHistory ? (
+                        testHistory.metaData?.stackName
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                  <ValueWithLabel label="CodeBuild Project">
+                    <div>
+                      {testHistory &&
+                      testHistory.metaData &&
+                      testHistory.codeBuildArn ? (
+                        <ExtLink to={generateCodeBuildLink(testHistory)}>
+                          {"Click to Open Link"}
+                        </ExtLink>
+                      ) : (
+                        <span>{"-"}</span>
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                </div>
+                <div className="flex-1">
+                  <ValueWithLabel label="Created">
+                    <div>
+                      {testHistory ? (
+                        formatLocalTime(testHistory.createdAt || "")
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                  <ValueWithLabel label="Duration">
+                    <div>
+                      {testHistory ? (
+                        testHistory.duration
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                </div>
+                <div className="flex-1">
+                  <ValueWithLabel label="Status">
+                    <div>
+                      {testHistory ? (
+                        <Status status={testHistory.status || "-"} />
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                </div>
+              </div>
+              <div className="flex value-label-span">
+                <div className="flex-1">
+                  <ValueWithLabel label="Parameters">
+                    <div>
+                      {testHistory?.parameters &&
+                      testHistory.parameters.length > 0 ? (
+                        testHistory.parameters
+                          .map((param) =>
+                            param
+                              ? `${param.parameterKey}: ${param.parameterValue}`
+                              : ""
+                          )
+                          .join(", ")
+                      ) : (
+                        <Status status="Loading" />
+                      )}
+                    </div>
+                  </ValueWithLabel>
+                </div>
+              </div>
+            </HeaderPanel>
+
+            <div>
+              <HeaderPanel title={"Test Details"}>
+                <div>
+                  {testHistory?.result?.map(
+                    (resultItem, index) =>
+                      resultItem && (
+                        <React.Fragment key={index}>
+                          <div>
+                            <h6>Test Trace {index + 1}</h6>
+                            <CodeCopy
+                              loading={false}
+                              code={resultItem.trace || ""}
+                            />
+                          </div>
+                          <div>
+                            <h6>Test Log {index + 1}</h6>
+                            <CodeCopy
+                              loading={false}
+                              code={resultItem.message || ""}
+                            />
+                          </div>
+                        </React.Fragment>
+                      )
+                  )}
+                </div>
+              </HeaderPanel>
             </div>
           </div>
         </div>
       </div>
-      <HelpPanel />
       <TriggerDialog
         isOpen={isTriggerDialogOpen}
         onClose={() => setIsTriggerDialogOpen(false)}

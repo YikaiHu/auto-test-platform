@@ -16,6 +16,7 @@ import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
 import { CheckPoint, CheckPointStatus } from "API";
 import TriggerDialog from "./TriggerDialog";
+import { startSingleTest } from "graphql/mutations";
 
 const PAGE_SIZE = 10;
 
@@ -23,7 +24,7 @@ const CheckPoints: React.FC = () => {
   const { t } = useTranslation();
   const breadCrumbList = [
     { name: t("name"), link: "/" },
-    { name: t("servicelog:name") },
+    { name: "Check Points" },
   ];
 
   const navigate = useNavigate();
@@ -36,9 +37,29 @@ const CheckPoints: React.FC = () => {
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
-  const handleTrigger = (buffer: string, logType: string) => {
+  const handleTrigger = async (buffer: string, logType: string) => {
     console.log("Buffer:", buffer, "Log Type:", logType);
-    setIsTriggerDialogOpen(false);
+    try {
+      const resData: any = await appSyncRequestQuery(startSingleTest, {
+        markerId: selectedCheckPoints[0].id,
+        parameters: [
+          {
+            parameterKey: "buffer",
+            parameterValue: buffer,
+          },
+          {
+            parameterKey: "logType",
+            parameterValue: logType,
+          },
+        ]
+      });
+      console.info("resData:", resData);
+      navigate(`/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsTriggerDialogOpen(false);
+    }
   };
 
   // Get Service Log List
@@ -53,10 +74,10 @@ const CheckPoints: React.FC = () => {
         page: curPage,
         count: PAGE_SIZE,
       });
-      const dataPipelineList: CheckPoint[] =
+      const checkPointsList: CheckPoint[] =
         resData.data.listTestCheckPoints.checkPoints;
       setTotoalCount(resData.data.listTestCheckPoints.total);
-      setCheckPointsList(dataPipelineList);
+      setCheckPointsList(checkPointsList);
       setLoadingData(false);
     } catch (error) {
       console.error(error);
@@ -85,7 +106,7 @@ const CheckPoints: React.FC = () => {
     }
     if (selectedCheckPoints.length > 0) {
       if (
-        selectedCheckPoints[0].status === CheckPointStatus.ACTIVE ||
+        selectedCheckPoints[0].status === CheckPointStatus.PASS ||
         selectedCheckPoints[0].status === CheckPointStatus.ERROR
       ) {
         // setDisabledDelete(false);
@@ -117,7 +138,7 @@ const CheckPoints: React.FC = () => {
       <PipelineStatusComp
         status={data.status}
         stackId={data.id}
-        error={data.error}
+        error={data.status}
       />
     );
   };
@@ -133,7 +154,7 @@ const CheckPoints: React.FC = () => {
               <TablePanel
                 trackId="id"
                 defaultSelectItem={selectedCheckPoints}
-                title={t("servicelog:title")}
+                title={"Integration Test Checkpoints"}
                 changeSelected={(item) => {
                   setSelectedCheckPoints(item);
                 }}
@@ -143,36 +164,29 @@ const CheckPoints: React.FC = () => {
                   {
                     id: "id",
                     header: "ID",
-                    width: 220,
+                    width: 200,
                     cell: (e: CheckPoint) => renderCheckPointId(e),
                   },
                   {
                     width: 150,
-                    id: "type",
-                    header: t("servicelog:list.projectName"),
+                    id: "projectName",
+                    header: "Project Name",
                     cell: (e: CheckPoint) => {
                       return e.projectName;
                     },
                   },
                   {
                     width: 150,
-                    id: "account",
-                    header: t("servicelog:list.modelName"),
+                    id: "modelName",
+                    header: "Model Name",
                     cell: (e: CheckPoint) => {
                       return e.modelName;
                     },
                   },
                   {
-                    id: "source",
-                    header: t("servicelog:list.checkPointName"),
-                    cell: (e: CheckPoint) => {
-                      return e.name;
-                    },
-                  },
-                  {
-                    width: 120,
+                    width: 150,
                     id: "status",
-                    header: t("servicelog:list.status"),
+                    header: "Latest Test Status",
                     cell: (e: CheckPoint) => renderStatus(e),
                   },
                 ]}
@@ -201,7 +215,7 @@ const CheckPoints: React.FC = () => {
                       {t("button.viewDetail")}
                     </Button>
                     <Button
-                      loading={disabledDetail}
+                      disabled={disabledDetail}
                       btnType="primary"
                       onClick={() => setIsTriggerDialogOpen(true)}
                     >

@@ -23,30 +23,8 @@ import {
   InfoBarTypes,
 } from "reducer/appReducer";
 import Alarms from "help/Alarms";
-import AccessProxy from "help/AccessProxy";
-import CreationMethodNetwork from "help/CreationMethodNetwork";
-import LogProcessing from "help/LogProcessing";
-import LogProcessingNetwork from "help/LogProcessingNetwork";
-import IngestionCreationMethod from "help/IngestionCreationMethod";
-import SampleDashboard from "help/SampleDashboard";
-import LogLifeCycle from "help/LogLifecycle";
-import NginxLogFormat from "help/NginxLogFormat";
-import NginxSampleLogParsing from "help/NginxSampleLogParsing";
-import LogConfigPath from "help/LogConfigPath";
-import LogConfigPathEKS from "help/LogConfigPathEKS";
-import ApacheLogFormat from "help/ApacheLogFormat";
-import ApacheSampleLogParsing from "help/ApacheSampleLogParsing";
-import RegExLogFormat from "help/RegExLogFormat";
-import InstanceGroupCreationMethod from "help/InstanceGroupCreationMethod";
-import { useTranslation } from "react-i18next";
-import S3FileType from "help/S3FileType";
-import EKSPattern from "help/EKSPattern";
-import EKSIAMRole from "help/EKSIAMRole";
-import ConfigTimeFormat from "help/ConfigTimeFormat";
-import ConfigFilter from "help/ConfigFilter";
-import ProxyInstance from "help/ProxyInstance";
-import PipelineAlarms from "help/PipelineAlarms";
 import { RootState } from "reducer/reducers";
+import { useTranslation } from "react-i18next";
 
 interface HelpPanelProps {
   className?: string;
@@ -90,67 +68,6 @@ export const HelpPanel: React.FC<HelpPanelProps> = (props: HelpPanelProps) => {
       {showInfoBar && (
         <div>
           {infoBarType === InfoBarTypes.ALARMS && <Alarms />}
-          {infoBarType === InfoBarTypes.ACCESS_PROXY && <AccessProxy />}
-          {infoBarType === InfoBarTypes.LOG_PROCESSING && <LogProcessing />}
-          {infoBarType === InfoBarTypes.CREATION_METHOD_NETWORK && (
-            <CreationMethodNetwork />
-          )}
-          {infoBarType === InfoBarTypes.LOG_PROCESSING_NETWORK && (
-            <LogProcessingNetwork />
-          )}
-          {infoBarType === InfoBarTypes.INGESTION_CREATION_METHOD && (
-            <IngestionCreationMethod />
-          )}
-          {infoBarType === InfoBarTypes.INSTANCE_GROUP_CREATION_METHOD && (
-            <InstanceGroupCreationMethod />
-          )}
-          {infoBarType === InfoBarTypes.SAMPLE_DASHBAORD && <SampleDashboard />}
-          {infoBarType === InfoBarTypes.APACHE_SAMPLE_DASHBOARD && (
-            <SampleDashboard
-              content={
-                <a href="https://aws-solutions.github.io/centralized-logging-with-opensearch/zh/implementation-guide/applications/apache/">
-                  &nbsp;
-                  https://aws-solutions.github.io/centralized-logging-with-opensearch/zh/implementation-guide/applications/apache/
-                </a>
-              }
-            />
-          )}
-          {infoBarType === InfoBarTypes.LOG_LIFECYCLE && <LogLifeCycle />}
-          {infoBarType === InfoBarTypes.NGINX_LOG_FORMAT && <NginxLogFormat />}
-          {infoBarType === InfoBarTypes.APACHE_LOG_FORMAT && (
-            <ApacheLogFormat />
-          )}
-          {infoBarType === InfoBarTypes.REGEX_LOG_FORMAT && <RegExLogFormat />}
-          {infoBarType === InfoBarTypes.NGINX_SAMPLE_LOG_PARSING && (
-            <NginxSampleLogParsing />
-          )}
-          {infoBarType === InfoBarTypes.APACHE_SAMPLE_LOG_PARSING && (
-            <ApacheSampleLogParsing />
-          )}
-          {infoBarType === InfoBarTypes.LOG_CONFIG_PATH && <LogConfigPath />}
-          {infoBarType === InfoBarTypes.LOG_CONFIG_PATH_EKS && (
-            <LogConfigPathEKS />
-          )}
-          {infoBarType === InfoBarTypes.S3_FILE_TYPE && <S3FileType />}
-          {infoBarType === InfoBarTypes.EKS_PATTERN && <EKSPattern />}
-          {infoBarType === InfoBarTypes.EKS_IAM_ROLE && <EKSIAMRole />}
-          {infoBarType === InfoBarTypes.CONFIG_TIME_FORMAT && (
-            <ConfigTimeFormat />
-          )}
-          {infoBarType === InfoBarTypes.CONFIG_FILTER && <ConfigFilter />}
-          {infoBarType === InfoBarTypes.PROXY_INSTANCE && <ProxyInstance />}
-          {infoBarType === InfoBarTypes.S3_PREFIX_FILTER && (
-            <div className="gsui-help-container">
-              <div className="gsui-help-content">
-                <p>{t("info:s3PrefixFilter.desc")}</p>
-                <ul>
-                  <li>{t("info:s3PrefixFilter.li1")}</li>
-                  <li>{t("info:s3PrefixFilter.li2")}</li>
-                </ul>
-              </div>
-            </div>
-          )}
-          {infoBarType === InfoBarTypes.PIPELINE_ALARM && <PipelineAlarms />}
         </div>
       )}
     </div>

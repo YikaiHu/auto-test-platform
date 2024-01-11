@@ -65,6 +65,19 @@ export class ServiceStack extends Construct {
       projectionType: ddb.ProjectionType.ALL,
     });
 
+    this.svcTable.addGlobalSecondaryIndex({
+      indexName: 'sortCreatedAtIndex',
+      partitionKey: { 
+        name: 'SK',
+        type: ddb.AttributeType.STRING 
+      },
+      sortKey: { 
+        name: 'createdAt',
+        type: ddb.AttributeType.STRING
+      },
+      projectionType: ddb.ProjectionType.ALL,
+    });
+
     // Create a lambda to handle all related APIs.
     const svcHandler = new lambda.Function(this, "ServiceHandler", {
       code: lambda.AssetCode.fromAsset(
@@ -117,9 +130,16 @@ export class ServiceStack extends Construct {
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });
 
-    svcLambdaDS.createResolver("getTestCheckPoint", {
+    svcLambdaDS.createResolver("listTestHistory", {
       typeName: "Query",
-      fieldName: "getTestCheckPoint",
+      fieldName: "listTestHistory",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    svcLambdaDS.createResolver("getTestHistory", {
+      typeName: "Query",
+      fieldName: "getTestHistory",
       requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });
@@ -167,7 +187,7 @@ export class ServiceStack extends Construct {
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(testResultParser),
       {
-        prefix: 'test_result/',
+        suffix: '.json',
       }
     );
   }
