@@ -43,8 +43,12 @@ const SIDE_MENU_LIST = [
     link: "/integration-test",
     subMenu: [
       {
-        name: "Check Points",
+        name: "Centralized Logging with OpenSearch",
         link: "/integration-test/checkpoints",
+      },
+      {
+        name: "Clickstream Analytics on AWS",
+        link: "/",
       },
     ],
     open: true,
