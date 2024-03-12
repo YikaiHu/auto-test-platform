@@ -21,6 +21,7 @@ export type CheckPoint = {
   status?: CheckPointStatus | null,
   projectName?: string | null,
   modelName?: string | null,
+  parameters?:  Array<AllowedParameters | null > | null,
 };
 
 export enum CheckPointStatus {
@@ -31,6 +32,12 @@ export enum CheckPointStatus {
   UNKNOWN = "UNKNOWN",
 }
 
+
+export type AllowedParameters = {
+  __typename: "AllowedParameters",
+  parameterKey?: string | null,
+  allowedValues?: Array< string | null > | null,
+};
 
 export type ListTestHistoryResponse = {
   __typename: "ListTestHistoryResponse",
@@ -95,6 +102,11 @@ export type ListTestCheckPointsQuery = {
       status?: CheckPointStatus | null,
       projectName?: string | null,
       modelName?: string | null,
+      parameters?:  Array< {
+        __typename: "AllowedParameters",
+        parameterKey?: string | null,
+        allowedValues?: Array< string | null > | null,
+      } | null > | null,
     } | null > | null,
     total?: number | null,
   } | null,

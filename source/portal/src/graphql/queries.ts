@@ -17,6 +17,11 @@ export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($pag
       status
       projectName
       modelName
+      parameters {
+        parameterKey
+        allowedValues
+        __typename
+      }
       __typename
     }
     total

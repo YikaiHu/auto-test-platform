@@ -226,6 +226,7 @@ const TestDetails: React.FC = () => {
         isOpen={isTriggerDialogOpen}
         onClose={() => setIsTriggerDialogOpen(false)}
         onTrigger={handleTrigger}
+        parameters={[]}
       />
     </div>
   );
