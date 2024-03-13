@@ -67,7 +67,7 @@
     "parameters":[
       {
         "parameterKey": "logType",
-        "allowedValues": ["realTimeLogs", "standardLog"]
+        "allowedValues": ["realTimeLog", "standardLog"]
       }
     ]
   },
