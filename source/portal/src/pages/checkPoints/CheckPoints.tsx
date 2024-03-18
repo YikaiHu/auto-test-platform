@@ -37,21 +37,17 @@ const CheckPoints: React.FC = () => {
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
-  const handleTrigger = async (buffer: string, logType: string) => {
-    console.log("Buffer:", buffer, "Log Type:", logType);
+  const handleTrigger = async (selections: []) => {
+    console.log("Inputs:", selections);
     try {
+      const parameters = Object.entries(selections).map(([key, value]) => ({
+        parameterKey: key,
+        parameterValue: value,
+      }));
+
       const resData: any = await appSyncRequestQuery(startSingleTest, {
         markerId: selectedCheckPoints[0].id,
-        parameters: [
-          {
-            parameterKey: "buffer",
-            parameterValue: buffer,
-          },
-          {
-            parameterKey: "logType",
-            parameterValue: logType,
-          },
-        ],
+        parameters: parameters,
       });
       console.info("resData:", resData);
       navigate(

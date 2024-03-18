@@ -156,6 +156,8 @@ def pass_parameters_to_codebuild(parameters, project_name):
                 codebuild_params_json["buffer_layer"] = parameter_value
             if parameter_key == "logType":
                 codebuild_params_json["log_type"] = parameter_value
+            else:
+                codebuild_params_json[parameter_key] = parameter_value
     codebuild_params_list = [codebuild_params_json]
     return codebuild_params_list
 

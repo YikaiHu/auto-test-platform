@@ -14,7 +14,7 @@ import { AllowedParameters } from "API";
 interface TriggerDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onTrigger: (buffer: string, logType: string) => void;
+  onTrigger: (selections: any) => void;
   parameters: AllowedParameters[];
 }
 
@@ -81,7 +81,7 @@ const TriggerDialog: React.FC<TriggerDialogProps> = ({
         <Button
           btnType="primary"
           disabled={!isTriggerEnabled}
-          onClick={() => onTrigger(selections["buffer"], selections["logType"])}
+          onClick={() => onTrigger(selections)}
         >
           Trigger
         </Button>
