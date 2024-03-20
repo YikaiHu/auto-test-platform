@@ -1,6 +1,86 @@
-{
-  "PK": "MARKER#asdqab125-qwer-4aef-89a1-asdfgertyw",
-  "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
-  "projectName": "CLO",
-  "modelName": "EC2"
- }
+[
+  {
+    "PK": "MARKER#asdqab125-qwer-4aef-89a1-asdfgertyw",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "EC2",
+    "parameters":[
+      {
+        "parameterKey": "buffer",
+        "allowedValues": ["KDS", "S3", "None"]
+      },
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["JSON", "Apache", "Nginx", "SingleText", "SpringBoot"]
+      }
+    ]
+  },
+  {
+    "PK": "MARKER#b0b91a6c-36bf-462d-ae92-3fbcb8e0d11b",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "eksDemonset",
+    "parameters":[
+      {
+        "parameterKey": "buffer",
+        "allowedValues": ["KDS", "S3", "None"]
+      },
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["JSON", "Apache", "Nginx", "SingleText", "SpringBoot"]
+      }
+    ]
+  },
+  {
+    "PK": "MARKER#b0b91a6c-36bf-462d-ae92-3fbcb8e0d11c",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "eksSidecar",
+    "parameters":[
+      {
+        "parameterKey": "buffer",
+        "allowedValues": ["KDS", "S3", "None"]
+      },
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["JSON", "Apache", "Nginx", "SingleText", "SpringBoot"]
+      }
+    ]
+  },
+  {
+    "PK": "MARKER#191d7387-0265-4d0c-9259-7aba026f2a2a",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "ELB",
+    "parameters":[
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["standardLog"]
+      }
+    ]
+  },
+  {
+    "PK": "MARKER#64d0bd8c-287b-4d36-8227-bd33d1facbf2",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "CloudFront",
+    "parameters":[
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["realTimeLog", "standardLog"]
+      }
+    ]
+  },
+  {
+    "PK": "MARKER#3d3f63cf-6345-4372-8f22-4bd97653728c",
+    "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+    "projectName": "CLO",
+    "modelName": "WAF",
+    "parameters":[
+      {
+        "parameterKey": "logType",
+        "allowedValues": ["fullRequestLog"]
+      }
+    ]
+  }
+]

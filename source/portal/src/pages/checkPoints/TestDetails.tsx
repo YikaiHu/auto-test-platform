@@ -80,8 +80,8 @@ const TestDetails: React.FC = () => {
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
-  const handleTrigger = (buffer: string, logType: string) => {
-    console.log("Buffer:", buffer, "Log Type:", logType);
+  const handleTrigger = (selection: any) => {
+    console.log("selection:", selection);
     setIsTriggerDialogOpen(false);
   };
 
@@ -226,6 +226,7 @@ const TestDetails: React.FC = () => {
         isOpen={isTriggerDialogOpen}
         onClose={() => setIsTriggerDialogOpen(false)}
         onTrigger={handleTrigger}
+        parameters={[]}
       />
     </div>
   );

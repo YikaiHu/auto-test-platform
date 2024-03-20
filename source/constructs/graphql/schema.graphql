@@ -36,6 +36,7 @@ type CheckPoint {
   status: CheckPointStatus
   projectName: String
   modelName: String
+  parameters: [AllowedParameters]
 }
 
 type ListCheckPointResponse {
@@ -79,4 +80,9 @@ input ParameterInput {
 type Parameters {
   parameterKey: String
   parameterValue: String
+}
+
+type AllowedParameters {
+  parameterKey: String
+  allowedValues: [String]
 }

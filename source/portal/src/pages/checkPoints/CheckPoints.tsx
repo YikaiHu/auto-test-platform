@@ -37,24 +37,22 @@ const CheckPoints: React.FC = () => {
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
-  const handleTrigger = async (buffer: string, logType: string) => {
-    console.log("Buffer:", buffer, "Log Type:", logType);
+  const handleTrigger = async (selections: []) => {
+    console.log("Inputs:", selections);
     try {
+      const parameters = Object.entries(selections).map(([key, value]) => ({
+        parameterKey: key,
+        parameterValue: value,
+      }));
+
       const resData: any = await appSyncRequestQuery(startSingleTest, {
         markerId: selectedCheckPoints[0].id,
-        parameters: [
-          {
-            parameterKey: "buffer",
-            parameterValue: buffer,
-          },
-          {
-            parameterKey: "logType",
-            parameterValue: logType,
-          },
-        ]
+        parameters: parameters,
       });
       console.info("resData:", resData);
-      navigate(`/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`);
+      navigate(
+        `/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -90,7 +88,9 @@ const CheckPoints: React.FC = () => {
 
   // Click View Detail Button Redirect to detail page
   const clickToReviewDetail = () => {
-    navigate(`/integration-test/checkpoints/history/${selectedCheckPoints[0]?.id}`);
+    navigate(
+      `/integration-test/checkpoints/history/${selectedCheckPoints[0]?.id}`
+    );
   };
 
   useEffect(() => {
@@ -129,7 +129,9 @@ const CheckPoints: React.FC = () => {
 
   const renderCheckPointId = (data: CheckPoint) => {
     return (
-      <Link to={`/integration-test/checkpoints/history/${data.id}`}>{data.id}</Link>
+      <Link to={`/integration-test/checkpoints/history/${data.id}`}>
+        {data.id}
+      </Link>
     );
   };
 
@@ -241,6 +243,7 @@ const CheckPoints: React.FC = () => {
         isOpen={isTriggerDialogOpen}
         onClose={() => setIsTriggerDialogOpen(false)}
         onTrigger={handleTrigger}
+        parameters={selectedCheckPoints[0]?.parameters || []}
       />
     </div>
   );

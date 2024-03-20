@@ -154,9 +154,12 @@ def pass_parameters_to_codebuild(parameters, project_name):
             parameter_value = param.get("parameterValue")
             if parameter_key == "buffer":
                 codebuild_params_json["buffer_layer"] = parameter_value
-            if parameter_key == "logType":
+            elif parameter_key == "logType":
                 codebuild_params_json["log_type"] = parameter_value
+            else:
+                codebuild_params_json[parameter_key] = parameter_value
     codebuild_params_list = [codebuild_params_json]
+    logger.info(f"CodeBuild parameters: {codebuild_params_list}")
     return codebuild_params_list
 
 
@@ -199,6 +202,7 @@ def update_environment_variables(codebuild_project, environment_variables):
 @router.route(field_name="startSingleTest")
 def start_single_task(**args):
     """Start single test task"""
+    logger.info(f"Starting task with args: {args}")
     marker_id = args.get("markerId")
     parameters = args.get("parameters")
     pk_id = str(uuid.uuid4())
