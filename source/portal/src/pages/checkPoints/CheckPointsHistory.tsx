@@ -13,7 +13,8 @@ import SideMenu from "components/SideMenu";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
-import { CheckPointStatus, TestHistory } from "API";
+import { TestHistory } from "API";
+import { startSingleTest } from "graphql/mutations";
 const PAGE_SIZE = 10;
 
 const CheckPointsHistory: React.FC = () => {
@@ -24,14 +25,16 @@ const CheckPointsHistory: React.FC = () => {
     { name: t("name"), link: "/" },
     { name: "Check Points", link: "/integration-test/checkpoints" },
     {
-      name: id || "",
+      name: id ?? "",
     },
   ];
 
   const navigate = useNavigate();
   const [loadingData, setLoadingData] = useState(false);
   const [testHistoriesList, setTestHistoriesList] = useState<TestHistory[]>([]);
-  const [selectedTestHistories, setSelectedTestHistories] = useState<any[]>([]);
+  const [selectedTestHistories, setSelectedTestHistories] = useState<
+    TestHistory[]
+  >([]);
   const [disabledDetail, setDisabledDetail] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [curPage, setCurPage] = useState(1);
@@ -62,9 +65,44 @@ const CheckPointsHistory: React.FC = () => {
     setCurPage(value);
   };
 
+  const handleRetry = async () => {
+    try {
+      if (selectedTestHistories.length === 0) {
+        console.error("No test history selected.");
+        return;
+      }
+      const testHistory = selectedTestHistories[0];
+      const parameters =
+        testHistory
+          .parameters!.map((item) =>
+            "parameterKey" in item! && "parameterValue" in item
+              ? {
+                  parameterKey: item.parameterKey,
+                  parameterValue: item.parameterValue,
+                }
+              : null
+          )
+          .filter((item) => item !== null) || [];
+
+      const resData = await appSyncRequestQuery(startSingleTest, {
+        markerId: testHistory.markerId,
+        parameters: parameters,
+      });
+
+      console.info("Retry initiated, resData:", resData);
+      navigate(
+        `/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`
+      );
+    } catch (error) {
+      console.error("Failed to retry test history:", error);
+    }
+  };
+
   // Click View Detail Button Redirect to detail page
   const clickToReviewDetail = () => {
-    navigate(`/integration-test/checkpoints/history/detail/${selectedTestHistories[0]?.id}`);
+    navigate(
+      `/integration-test/checkpoints/history/detail/${selectedTestHistories[0]?.id}`
+    );
   };
 
   useEffect(() => {
@@ -76,18 +114,6 @@ const CheckPointsHistory: React.FC = () => {
       setDisabledDetail(false);
     } else {
       setDisabledDetail(true);
-    }
-    if (selectedTestHistories.length > 0) {
-      if (
-        selectedTestHistories[0].status === CheckPointStatus.PASS ||
-        selectedTestHistories[0].status === CheckPointStatus.ERROR
-      ) {
-        // setDisabledDelete(false);
-      } else {
-        // setDisabledDelete(true);
-      }
-    } else {
-      // setDisabledDelete(true);
     }
   }, [selectedTestHistories]);
 
@@ -102,7 +128,9 @@ const CheckPointsHistory: React.FC = () => {
 
   const renderHistoryId = (data: TestHistory) => {
     return (
-      <Link to={`/integration-test/checkpoints/history/detail/${data.id}`}>{data.id}</Link>
+      <Link to={`/integration-test/checkpoints/history/detail/${data.id}`}>
+        {data.id}
+      </Link>
     );
   };
 
@@ -146,9 +174,15 @@ const CheckPointsHistory: React.FC = () => {
                     header: t("Parameters"),
                     cell: (e: TestHistory) => {
                       if (e.parameters && e.parameters.length > 0) {
-                        return e.parameters.map(param => param ? `${param.parameterKey}: ${param.parameterValue}` : '').join(', ');
+                        return e.parameters
+                          .map((param) =>
+                            param
+                              ? `${param.parameterKey}: ${param.parameterValue}`
+                              : ""
+                          )
+                          .join(", ");
                       }
-                      return 'No Parameters';
+                      return "No Parameters";
                     },
                   },
                   {
@@ -196,6 +230,13 @@ const CheckPointsHistory: React.FC = () => {
                       }}
                     >
                       {t("button.viewDetail")}
+                    </Button>
+                    <Button
+                      disabled={disabledDetail}
+                      btnType="primary"
+                      onClick={() => handleRetry()}
+                    >
+                      {"Retry Test"}
                     </Button>
                   </div>
                 }
