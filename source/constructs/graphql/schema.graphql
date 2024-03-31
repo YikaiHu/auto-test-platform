@@ -19,6 +19,15 @@ type Mutation {
     markerId: String!, 
     parameters: [ParameterInput]
   ): String
+
+  importTestEnv(
+    envName: String!
+    region: String!
+    stackName: String!
+    accountId: String
+    alarmEmail: String!
+    projectId: String
+  ): String
 }
 
 enum CheckPointStatus {

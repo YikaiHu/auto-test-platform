@@ -14,6 +14,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 ddb_table_name = os.environ["TABLE"]
+sns_topic_arn = os.environ["SNS_TOPIC_ARN"]
 ddb_table = dynamodb.Table(ddb_table_name)
 
 
@@ -102,4 +103,4 @@ def parse_test_result(parsed_data):
     ddb_data['result'] = results
     return ddb_data
     
-        
+

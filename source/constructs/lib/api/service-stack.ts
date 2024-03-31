@@ -25,6 +25,8 @@ import {
   aws_lambda as lambda,
   aws_s3 as s3,
   aws_s3_notifications as s3n,
+  aws_sns as sns, 
+  aws_sns_subscriptions as sns_subs, 
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
@@ -37,9 +39,14 @@ export interface SvcStackProps {
 }
 export class ServiceStack extends Construct {
   readonly svcTable: ddb.Table;
+  readonly testResultTopic: sns.Topic;
 
   constructor(scope: Construct, id: string, props: SvcStackProps) {
     super(scope, id);
+    // Create an SNS topic for test result notifications
+    this.testResultTopic = new sns.Topic(this, 'TestResultTopic', { 
+      topicName: 'TestResultTopic',
+    });
 
     // Create a table to store logging  info
     this.svcTable = new ddb.Table(this, "ServiceStack", {
@@ -95,6 +102,7 @@ export class ServiceStack extends Construct {
         REGION: Aws.REGION,
         PARTITION: Aws.PARTITION,
         CODEBUILD_PROJECT_NAME: props.codeBuildProject.projectName,
+        SNS_TOPIC_ARN: this.testResultTopic.topicArn
       },
       description: `${Aws.STACK_NAME} - APIs Resolver`,
     });
@@ -108,6 +116,12 @@ export class ServiceStack extends Construct {
           effect: iam.Effect.ALLOW,
           resources: ["*"],
           actions: ["*"],
+        }),
+        // grant permission to subscribe sns topic
+        new iam.PolicyStatement({ 
+          effect: iam.Effect.ALLOW,
+          actions: ["sns:Subscribe"], 
+          resources: [this.testResultTopic.topicArn],
         }),
       ],
     });
@@ -168,6 +182,7 @@ export class ServiceStack extends Construct {
         REGION: Aws.REGION,
         PARTITION: Aws.PARTITION,
         CODEBUILD_PROJECT_NAME: props.codeBuildProject.projectName,
+        SNS_TOPIC_ARN: this.testResultTopic.topicArn, 
       },
       description: `${Aws.STACK_NAME} - Test Result Parser`,
     });
@@ -177,6 +192,11 @@ export class ServiceStack extends Construct {
           effect: iam.Effect.ALLOW,
           resources: ["*"],
           actions: ["*"],
+        }),
+        new iam.PolicyStatement({ 
+          effect: iam.Effect.ALLOW,
+          actions: ["sns:Publish"],
+          resources: [this.testResultTopic.topicArn],
         }),
       ],
     });
