@@ -77,6 +77,23 @@ export type MetaData = {
   stackName?: string | null,
 };
 
+export type ListTestEnvResponse = {
+  __typename: "ListTestEnvResponse",
+  testEnvs?:  Array<TestEnv | null > | null,
+  total?: number | null,
+};
+
+export type TestEnv = {
+  __typename: "TestEnv",
+  id: string,
+  envName?: string | null,
+  region?: string | null,
+  stackName?: string | null,
+  accountId?: string | null,
+  alarmEmail?: string | null,
+  projectId?: string | null,
+};
+
 export type StartSingleTestMutationVariables = {
   markerId: string,
   parameters?: Array< ParameterInput | null > | null,
@@ -86,9 +103,31 @@ export type StartSingleTestMutation = {
   startSingleTest?: string | null,
 };
 
+export type ImportTestEnvMutationVariables = {
+  envName: string,
+  region: string,
+  stackName: string,
+  accountId?: string | null,
+  alarmEmail: string,
+  projectId?: string | null,
+};
+
+export type ImportTestEnvMutation = {
+  importTestEnv?: string | null,
+};
+
+export type DeleteTestEnvMutationVariables = {
+  id: string,
+};
+
+export type DeleteTestEnvMutation = {
+  deleteTestEnv?: string | null,
+};
+
 export type ListTestCheckPointsQueryVariables = {
   page?: number | null,
   count?: number | null,
+  testEnvId?: string | null,
 };
 
 export type ListTestCheckPointsQuery = {
@@ -152,6 +191,7 @@ export type ListTestHistoryQuery = {
 
 export type GetTestHistoryQueryVariables = {
   id: string,
+  testEnvId?: string | null,
 };
 
 export type GetTestHistoryQuery = {
@@ -179,5 +219,44 @@ export type GetTestHistoryQuery = {
       region?: string | null,
       stackName?: string | null,
     } | null,
+  } | null,
+};
+
+export type ListTestEnvsQueryVariables = {
+  page?: number | null,
+  count?: number | null,
+};
+
+export type ListTestEnvsQuery = {
+  listTestEnvs?:  {
+    __typename: "ListTestEnvResponse",
+    testEnvs?:  Array< {
+      __typename: "TestEnv",
+      id: string,
+      envName?: string | null,
+      region?: string | null,
+      stackName?: string | null,
+      accountId?: string | null,
+      alarmEmail?: string | null,
+      projectId?: string | null,
+    } | null > | null,
+    total?: number | null,
+  } | null,
+};
+
+export type GetTestEnvQueryVariables = {
+  id: string,
+};
+
+export type GetTestEnvQuery = {
+  getTestEnv?:  {
+    __typename: "TestEnv",
+    id: string,
+    envName?: string | null,
+    region?: string | null,
+    stackName?: string | null,
+    accountId?: string | null,
+    alarmEmail?: string | null,
+    projectId?: string | null,
   } | null,
 };

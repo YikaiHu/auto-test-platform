@@ -51,7 +51,7 @@ export const EN_LANGUAGE_LIST = ["en", "en_US", "en-US", "en_GB"];
 export const ZH_LANGUAGE_LIST = ["zh", "zh_CN", "zh-CN", "zh_TW"];
 
 export const GITHUB_LINK =
-  "https://github.com/aws-solutions/" + SLUTION_REPO_NAME;
+  "https://github.com/YikaiHu/auto-test-platform"
 export const URL_FEEDBACK = GITHUB_LINK + "/issues";
 
 export const WORKSHOP_DOCS_LINK =

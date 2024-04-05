@@ -22,6 +22,9 @@ import { useTranslation } from "react-i18next";
 import "@aws-amplify/ui-react/styles.css";
 import CheckPointsHistory from "pages/checkPoints/CheckPointsHistory";
 import TestDetails from "pages/checkPoints/TestDetails";
+import TestEnvList from "pages/testEnvs/TestEnvList";
+import ImportTestEnv from "pages/testEnvs/ImportTestEnv";
+import TestEnvDetail from "pages/testEnvs/TestEnvDetail";
 
 export interface SignedInAppProps {
   oidcSignOut?: () => void;
@@ -79,6 +82,18 @@ const SignedInApp: React.FC<SignedInAppProps> = (props: SignedInAppProps) => {
             <Route
               path="/integration-test/checkpoints/history/detail/:id"
               element={<TestDetails />}
+            />
+            <Route
+              path="/test-env/environments"
+              element={<TestEnvList />}
+            />
+            <Route
+              path="/test-env/environments/import"
+              element={<ImportTestEnv />}
+            />
+            <Route
+              path="/test-env/environments/detail/:id"
+              element={<TestEnvDetail />}
             />
 
             <Route

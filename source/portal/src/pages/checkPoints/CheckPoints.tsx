@@ -7,16 +7,18 @@ import { TablePanel } from "components/TablePanel";
 import Breadcrumb from "components/Breadcrumb";
 import { SelectType } from "components/TablePanel/tablePanel";
 import { appSyncRequestQuery } from "assets/js/request";
-import { listTestCheckPoints } from "graphql/queries";
+import { listTestCheckPoints, listTestEnvs } from "graphql/queries";
 import { AUTO_REFRESH_INT } from "assets/js/const";
 import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
-import { CheckPoint, CheckPointStatus } from "API";
+import { CheckPoint, CheckPointStatus, TestEnv } from "API";
 import TriggerDialog from "./TriggerDialog";
 import { startSingleTest } from "graphql/mutations";
+import { handleErrorMessage } from "assets/js/alert";
+import ATPSelect from "../testEnvs/Select";
 
 const PAGE_SIZE = 10;
 
@@ -24,7 +26,7 @@ const CheckPoints: React.FC = () => {
   const { t } = useTranslation();
   const breadCrumbList = [
     { name: t("name"), link: "/" },
-    { name: "Check Points" },
+    { name: "Check Points" }
   ];
 
   const navigate = useNavigate();
@@ -35,6 +37,33 @@ const CheckPoints: React.FC = () => {
   const [totoalCount, setTotoalCount] = useState(0);
   const [curPage, setCurPage] = useState(1);
 
+  const [envList, setEnvList] = useState<TestEnv[]>([]);
+  const [selectedEnvId, setSelectedEnvId] = useState<string>("");
+
+  const fetchEnvList = async () => {
+    try {
+      const resData: any = await appSyncRequestQuery(listTestEnvs, {
+        page: 1,
+        count: 100
+      });
+      const dataTestEnvList: TestEnv[] = [
+        { id: "", envName: "ALL" },
+        ...(resData.data.listTestEnvs?.testEnvs || [])
+      ];
+      setEnvList(dataTestEnvList);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnvList();
+  }, []);
+
+  const handleEnvChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedEnvId(event.target.value);
+  };
+
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
 
   const handleTrigger = async (selections: []) => {
@@ -42,18 +71,19 @@ const CheckPoints: React.FC = () => {
     try {
       const parameters = Object.entries(selections).map(([key, value]) => ({
         parameterKey: key,
-        parameterValue: value,
+        parameterValue: value
       }));
 
       const resData: any = await appSyncRequestQuery(startSingleTest, {
         markerId: selectedCheckPoints[0].id,
-        parameters: parameters,
+        parameters: parameters
       });
       console.info("resData:", resData);
       navigate(
         `/integration-test/checkpoints/history/detail/${resData.data.startSingleTest}`
       );
-    } catch (error) {
+    } catch (error: any) {
+      handleErrorMessage(error.message);
       console.error(error);
     } finally {
       setIsTriggerDialogOpen(false);
@@ -70,7 +100,7 @@ const CheckPoints: React.FC = () => {
       }
       const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
         page: curPage,
-        count: PAGE_SIZE,
+        count: PAGE_SIZE
       });
       const checkPointsList: CheckPoint[] =
         resData.data.listTestCheckPoints.checkPoints;
@@ -167,7 +197,7 @@ const CheckPoints: React.FC = () => {
                     id: "id",
                     header: "ID",
                     width: 200,
-                    cell: (e: CheckPoint) => renderCheckPointId(e),
+                    cell: (e: CheckPoint) => renderCheckPointId(e)
                   },
                   {
                     width: 150,
@@ -175,7 +205,7 @@ const CheckPoints: React.FC = () => {
                     header: "Project Name",
                     cell: (e: CheckPoint) => {
                       return e.projectName;
-                    },
+                    }
                   },
                   {
                     width: 150,
@@ -183,24 +213,31 @@ const CheckPoints: React.FC = () => {
                     header: "Model Name",
                     cell: (e: CheckPoint) => {
                       return e.modelName;
-                    },
+                    }
                   },
                   {
                     width: 150,
                     id: "status",
                     header: "Latest Test Status",
-                    cell: (e: CheckPoint) => renderStatus(e),
-                  },
+                    cell: (e: CheckPoint) => renderStatus(e)
+                  }
                 ]}
                 items={checkPointsList}
                 actions={
-                  <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: "8px"
+                    }}
+                  >
                     <Button
                       btnType="icon"
                       disabled={loadingData}
                       onClick={() => {
                         if (curPage === 1) {
                           getCheckPointsList();
+                          fetchEnvList();
                         } else {
                           setCurPage(1);
                         }
@@ -208,6 +245,16 @@ const CheckPoints: React.FC = () => {
                     >
                       <ButtonRefresh loading={loadingData} />
                     </Button>
+                    <ATPSelect
+                      value={selectedEnvId}
+                      onChange={handleEnvChange}
+                      optionList={envList.map((env) => ({
+                        name: `Test Env: ${env.envName || ""}`,
+                        value: env.id
+                      }))}
+                      allowEmpty={true}
+                      width={140}
+                    />
                     <Button
                       disabled={disabledDetail}
                       onClick={() => {

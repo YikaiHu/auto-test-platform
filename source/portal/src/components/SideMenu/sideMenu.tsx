@@ -53,6 +53,17 @@ const SIDE_MENU_LIST = [
     ],
     open: true,
   },
+  {
+    name: "Resources",
+    link: "/test-env",
+    subMenu: [
+      {
+        name: "Test Environment",
+        link: "/test-env/environments",
+      },
+    ],
+    open: true,
+  },
 ];
 
 export const SideMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {

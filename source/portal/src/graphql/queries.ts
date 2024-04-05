@@ -8,8 +8,8 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
-export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($page: Int, $count: Int) {
-  listTestCheckPoints(page: $page, count: $count) {
+export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($page: Int, $count: Int, $testEnvId: ID) {
+  listTestCheckPoints(page: $page, count: $count, testEnvId: $testEnvId) {
     checkPoints {
       id
       createdAt
@@ -67,8 +67,8 @@ export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $p
   APITypes.ListTestHistoryQueryVariables,
   APITypes.ListTestHistoryQuery
 >;
-export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!) {
-  getTestHistory(id: $id) {
+export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!, $testEnvId: ID) {
+  getTestHistory(id: $id, testEnvId: $testEnvId) {
     id
     markerId
     createdAt
@@ -97,4 +97,40 @@ export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!) {
 ` as GeneratedQuery<
   APITypes.GetTestHistoryQueryVariables,
   APITypes.GetTestHistoryQuery
+>;
+export const listTestEnvs = /* GraphQL */ `query ListTestEnvs($page: Int, $count: Int) {
+  listTestEnvs(page: $page, count: $count) {
+    testEnvs {
+      id
+      envName
+      region
+      stackName
+      accountId
+      alarmEmail
+      projectId
+      __typename
+    }
+    total
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListTestEnvsQueryVariables,
+  APITypes.ListTestEnvsQuery
+>;
+export const getTestEnv = /* GraphQL */ `query GetTestEnv($id: ID!) {
+  getTestEnv(id: $id) {
+    id
+    envName
+    region
+    stackName
+    accountId
+    alarmEmail
+    projectId
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetTestEnvQueryVariables,
+  APITypes.GetTestEnvQuery
 >;

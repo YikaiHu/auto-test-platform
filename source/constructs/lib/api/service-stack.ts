@@ -157,10 +157,38 @@ export class ServiceStack extends Construct {
       requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });
+    
+    svcLambdaDS.createResolver("listTestEnvs", {
+      typeName: "Query",
+      fieldName: "listTestEnvs",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    svcLambdaDS.createResolver("getTestEnv", {
+      typeName: "Query",
+      fieldName: "getTestEnv",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
 
     svcLambdaDS.createResolver("startSingleTest", {
       typeName: "Mutation",
       fieldName: "startSingleTest",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    svcLambdaDS.createResolver("importTestEnv", {
+      typeName: "Mutation",
+      fieldName: "importTestEnv",
+      requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
+      responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
+    });
+
+    svcLambdaDS.createResolver("deleteTestEnv", {
+      typeName: "Mutation",
+      fieldName: "deleteTestEnv",
       requestMappingTemplate: appsync.MappingTemplate.lambdaRequest(),
       responseMappingTemplate: appsync.MappingTemplate.lambdaResult(),
     });

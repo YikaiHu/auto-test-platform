@@ -5,6 +5,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 import uuid
+import hashlib
 from enum import Enum
 
 
@@ -12,6 +13,7 @@ from boto3.dynamodb.conditions import Attr, Key
 
 from commonlib import AWSConnection, handle_error, AppSyncRouter
 from commonlib.utils import paginate
+from commonlib.exception import APIException
 
 import boto3
 
@@ -27,16 +29,6 @@ class ErrorCode(Enum):
     UNSUPPORTED_ACTION = "Unsupported action specified"
     UNKNOWN_ERROR = "Unknown exception occurred"
     VALUE_ERROR = "Value error"
-
-    
-class APIException(Exception):
-    def __init__(self, code: ErrorCode, message: str = ""):
-        self.type = code.name
-        self.message = message if message else code.value
-
-    def __str__(self) -> str:
-        return f"[{self.type}] {self.message}"
-        
 
 
 metadata_json = {
@@ -58,7 +50,7 @@ sns_topic_arn = os.environ.get("SNS_TOPIC_ARN")
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(table_name)
-sns = boto3.client('sns')
+sns = boto3.client("sns")
 codebuild_project = os.environ.get("CODEBUILD_PROJECT_NAME")
 current_region = os.environ.get("REGION")
 current_partition = os.environ.get("PARTITION")
@@ -230,7 +222,7 @@ def start_single_task(**args):
         KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}"),
         ScanIndexForward=False,
     )
-    
+
     half_hour_ago = datetime.utcnow() - timedelta(minutes=30)
     items = search_deamonset.get("Items", [])
     if items:
@@ -239,16 +231,19 @@ def start_single_task(**args):
             operate_time = item.get("createdAt", "")
             timestamp = datetime.strptime(operate_time, "%Y-%m-%dT%H:%M:%SZ")
             timestamp_dt = datetime.fromtimestamp(timestamp.timestamp())
-            
-            if status == 'RUNNING' and timestamp_dt > half_hour_ago:
-                raise APIException(ErrorCode.UNKNOWN_ERROR, "Deamonset case is running. Please wait for finishing and start again!")
+
+            if status == "RUNNING" and timestamp_dt > half_hour_ago:
+                raise APIException(
+                    ErrorCode.UNKNOWN_ERROR,
+                    "Deamonset case is running. Please wait for finishing and start again!",
+                )
 
     parameters = args.get("parameters")
     pk_id = str(uuid.uuid4())
     search_response = table.query(
         KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
     )
-    
+
     items = search_response.get("Items", [])
     if items:
         item = items[0]
@@ -272,7 +267,7 @@ def start_single_task(**args):
 
     update_environment_variables(codebuild_project, environment_variables)
     start_build_response = codebuild_client.start_build(projectName=codebuild_project)
-    codebuild_arn = start_build_response['build']['arn']
+    codebuild_arn = start_build_response["build"]["arn"]
 
     print("CodeBuild triggered:", start_build_response)
 
@@ -299,7 +294,7 @@ def start_single_task(**args):
         },
         "parameters": parameters_parsed,
         "status": "RUNNING",
-        "codeBuildArn": codebuild_arn
+        "codeBuildArn": codebuild_arn,
     }
 
     response = table.put_item(Item=ddb_data)
@@ -321,15 +316,15 @@ def import_env(**args):
     region = args.get("region")
     account_id = args.get("accountId", "691546483958")
     email = args.get("alarmEmail")
-    project_id = args.get("projectId", "775ab001-rety-ghkl-poiu-123597a8zxcv")
-    env_id = f"{env_name}-{str(uuid.uuid4())}"
+    project_id = args.get("projectId") or "775ab001-rety-ghkl-poiu-123597a8zxcv"
+    # Generate hash using accountId, region, stackName
+    hash_input = f"{account_id}{region}{stack_name}".encode('utf-8')
+    hash_result = hashlib.sha256(hash_input).hexdigest()
+    env_id = str(uuid.UUID(hash_result[:32]))
     # create subscription
-    response = sns.subscribe(
-    TopicArn=sns_topic_arn,
-    Protocol='email',
-    Endpoint=email
-    )
-    subscription_arn = response['SubscriptionArn']
+    response = sns.subscribe(TopicArn=sns_topic_arn, Protocol="email", Endpoint=email)
+    subscription_arn = response["SubscriptionArn"]
+    current_timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     ddb_data = {
         "PK": f"{ENTITY_TYPE.TEST_ENV.value}#{env_id}",
         "SK": f"{ENTITY_TYPE.PROJECT.value}#{project_id}",
@@ -338,7 +333,8 @@ def import_env(**args):
         "region": region,
         "accountId": account_id,
         "alarmEmail": email,
-        "subscriptionArn": subscription_arn
+        "subscriptionArn": subscription_arn,
+        "createdAt": current_timestamp,
     }
     response = table.put_item(Item=ddb_data)
 
@@ -350,9 +346,75 @@ def import_env(**args):
         return None
 
 
- 
+@router.route(field_name="listTestEnvs")
+def list_test_envs(page=1, count=20):
+    """List test environments"""
+    logger.info(f"List TestEnvs from JSON file in page {page} with {count} of records")
+
+    response = table.scan(
+        FilterExpression=Attr("PK").begins_with(f"{ENTITY_TYPE.TEST_ENV.value}#"),
+    )
+
+    items = response.get("Items", [])
+    total = response.get("Count", 0)
+
+    for item in items:
+        pk = item.get("PK", "")
+        item["id"] = pk.split("#")[1] if "#" in pk else pk
+        sk = item.get("SK", "")
+        item["projectId"] = sk.split("#")[1] if "#" in sk else sk
+
+    total, testEnvs = paginate(items, page, count, sort_by="createdAt")
+    return {
+        "total": total,
+        "testEnvs": testEnvs,
+    }
 
 
+@router.route(field_name="getTestEnv")
+def get_test_env(id: str):
+    """Get test environment for a given ID."""
+    logger.info(f"Get test environment for ID: {id}")
 
-    
-    
+    try:
+        response = table.query(
+            KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{id}")
+        )
+        items = response.get("Items", [])
+
+        if items:
+            item = items[0]
+            pk = item.get("PK", "")
+            item["id"] = pk.split("#")[1] if "#" in pk else pk
+            sk = item.get("SK", "")
+            item["projectId"] = sk.split("#")[1] if "#" in sk else sk
+
+            return item
+        else:
+            logger.info(f"No test environment found for ID: {id}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error fetching test environment: {e}")
+        return None
+
+
+@router.route(field_name="deleteTestEnv")
+def delete_test_env(id: str):
+    """Delete test environment for a given ID."""
+    logger.info(f"Delete test environment for ID: {id}")
+
+    try:
+        # TODO: using dynamic sk
+        response = table.delete_item(
+            Key={
+                "PK": f"{ENTITY_TYPE.TEST_ENV.value}#{id}",
+                "SK": "PROJECT#775ab001-rety-ghkl-poiu-123597a8zxcv",
+            },
+        )
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Error deleting test environment: {e}")
+        return None
