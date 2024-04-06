@@ -9,9 +9,9 @@ schema {
 type Query {
   listTestCheckPoints(page: Int, count: Int, testEnvId: ID): ListCheckPointResponse
 
-  listTestHistory(id: ID!, page: Int, count: Int): ListTestHistoryResponse
+  listTestHistory(id: ID!, page: Int, count: Int, testEnvId: ID): ListTestHistoryResponse
 
-  getTestHistory(id: ID!, testEnvId: ID): TestHistory
+  getTestHistory(id: ID!): TestHistory
 
   listTestEnvs(page: Int, count: Int): ListTestEnvResponse
 
@@ -21,6 +21,7 @@ type Query {
 type Mutation {
   startSingleTest(
     markerId: String!, 
+    testEnvId: ID,
     parameters: [ParameterInput]
   ): String
 

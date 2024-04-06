@@ -22,6 +22,11 @@ import ATPSelect from "../testEnvs/Select";
 
 const PAGE_SIZE = 10;
 
+export interface Parameter {
+  parameterKey: string;
+  parameterValue: string;
+}
+
 const CheckPoints: React.FC = () => {
   const { t } = useTranslation();
   const breadCrumbList = [
@@ -51,6 +56,18 @@ const CheckPoints: React.FC = () => {
         ...(resData.data.listTestEnvs?.testEnvs || [])
       ];
       setEnvList(dataTestEnvList);
+
+      // Check if the selected option in localStorage is still valid
+      const storedEnvId = localStorage.getItem("selectedTestEnv");
+      if (
+        storedEnvId &&
+        dataTestEnvList.some((env) => env.id === storedEnvId)
+      ) {
+        setSelectedEnvId(storedEnvId);
+      } else {
+        setSelectedEnvId("");
+        localStorage.removeItem("selectedTestEnv");
+      }
     } catch (error) {
       console.error(error);
     }
@@ -61,7 +78,9 @@ const CheckPoints: React.FC = () => {
   }, []);
 
   const handleEnvChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedEnvId(event.target.value);
+    const selectedValue = event.target.value;
+    setSelectedEnvId(selectedValue);
+    localStorage.setItem("selectedTestEnv", selectedValue);
   };
 
   const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false);
@@ -69,13 +88,16 @@ const CheckPoints: React.FC = () => {
   const handleTrigger = async (selections: []) => {
     console.log("Inputs:", selections);
     try {
-      const parameters = Object.entries(selections).map(([key, value]) => ({
-        parameterKey: key,
-        parameterValue: value
-      }));
+      const parameters: Parameter[] = Object.entries(selections).map(
+        ([key, value]) => ({
+          parameterKey: key,
+          parameterValue: String(value)
+        })
+      );
 
       const resData: any = await appSyncRequestQuery(startSingleTest, {
         markerId: selectedCheckPoints[0].id,
+        testEnvId: selectedEnvId,
         parameters: parameters
       });
       console.info("resData:", resData);
@@ -100,7 +122,8 @@ const CheckPoints: React.FC = () => {
       }
       const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
         page: curPage,
-        count: PAGE_SIZE
+        count: PAGE_SIZE,
+        testEnvId: selectedEnvId
       });
       const checkPointsList: CheckPoint[] =
         resData.data.listTestCheckPoints.checkPoints;
@@ -126,6 +149,10 @@ const CheckPoints: React.FC = () => {
   useEffect(() => {
     getCheckPointsList();
   }, [curPage]);
+
+  useEffect(() => {
+    getCheckPointsList();
+  }, [selectedEnvId]);
 
   useEffect(() => {
     console.info("selectedCheckPoints:", selectedCheckPoints);
@@ -155,7 +182,7 @@ const CheckPoints: React.FC = () => {
     }, AUTO_REFRESH_INT);
     console.info("refreshInterval:", refreshInterval);
     return () => clearInterval(refreshInterval);
-  }, [curPage]);
+  }, [curPage, selectedEnvId]);
 
   const renderCheckPointId = (data: CheckPoint) => {
     return (

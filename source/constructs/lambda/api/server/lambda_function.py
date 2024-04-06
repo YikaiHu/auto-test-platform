@@ -63,10 +63,10 @@ def lambda_handler(event, _):
 
 
 @router.route(field_name="listTestCheckPoints")
-def list_test_checkpoints(page=1, count=20):
+def list_test_checkpoints(page=1, count=20, testEnvId=None):
     """List test checkpoints"""
     logger.info(
-        f"List TestCheckPoints from JSON file in page {page} with {count} of records"
+        f"List TestCheckPoints from JSON file in page {page} with {count} of records for testEnvId: {testEnvId}"
     )
 
     response = table.scan(
@@ -80,14 +80,18 @@ def list_test_checkpoints(page=1, count=20):
         pk = item.get("PK", "")
         item["id"] = pk.split("#")[1] if "#" in pk else pk
 
-        history_response = table.query(
-            IndexName="sortCreatedAtIndex",
-            KeyConditionExpression=Key("SK").eq(
+        query_params = {
+            "IndexName": "sortCreatedAtIndex",
+            "KeyConditionExpression": Key("SK").eq(
                 f"{ENTITY_TYPE.MARKER.value}#{item['id']}"
             ),
-            ScanIndexForward=False,
-            Limit=1,
-        )
+            "ScanIndexForward": False,
+            "Limit": 1,
+        }
+        # Filter by testEnvId if provided, this is for old data that doesn't have testEnvId
+        if testEnvId:
+            query_params["FilterExpression"] = Attr("testEnvId").eq(testEnvId)
+        history_response = table.query(**query_params)
 
         latest_test = history_response.get("Items", [])
         if latest_test:
@@ -103,15 +107,21 @@ def list_test_checkpoints(page=1, count=20):
 
 
 @router.route(field_name="listTestHistory")
-def list_test_history(id, page=1, count=20):
+def list_test_history(id, page=1, count=20, testEnvId=""):
     """List test history"""
-    logger.info(f"List history from JSON file in page {page} with {count} of records")
-
-    response = table.query(
-        IndexName="sortCreatedAtIndex",
-        KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{id}"),
-        ScanIndexForward=False,
+    logger.info(
+        f"List history from JSON file in page {page} with {count} of records for test env ID: {testEnvId}"
     )
+
+    query_params = {
+        "IndexName": "sortCreatedAtIndex",
+        "KeyConditionExpression": Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{id}"),
+        "ScanIndexForward": False,
+    }
+    # Filter by testEnvId if provided, this is for old data that doesn't have testEnvId
+    if testEnvId:
+        query_params["FilterExpression"] = Attr("testEnvId").eq(testEnvId)
+    response = table.query(**query_params)
 
     items = response.get("Items", [])
     total = response.get("Count", 0)
@@ -239,6 +249,11 @@ def start_single_task(**args):
                 )
 
     parameters = args.get("parameters")
+
+    # Get test environment ID from parameters
+    test_env_id = args.get("testEnvId")
+    # TODO: abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+
     pk_id = str(uuid.uuid4())
     search_response = table.query(
         KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
@@ -295,6 +310,7 @@ def start_single_task(**args):
         "parameters": parameters_parsed,
         "status": "RUNNING",
         "codeBuildArn": codebuild_arn,
+        "testEnvId": test_env_id,
     }
 
     response = table.put_item(Item=ddb_data)
@@ -318,7 +334,7 @@ def import_env(**args):
     email = args.get("alarmEmail")
     project_id = args.get("projectId") or "775ab001-rety-ghkl-poiu-123597a8zxcv"
     # Generate hash using accountId, region, stackName
-    hash_input = f"{account_id}{region}{stack_name}".encode('utf-8')
+    hash_input = f"{account_id}{region}{stack_name}".encode("utf-8")
     hash_result = hashlib.sha256(hash_input).hexdigest()
     env_id = str(uuid.UUID(hash_result[:32]))
     # create subscription

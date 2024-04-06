@@ -6,15 +6,16 @@ import { TablePanel } from "components/TablePanel";
 import Breadcrumb from "components/Breadcrumb";
 import { SelectType } from "components/TablePanel/tablePanel";
 import { appSyncRequestQuery } from "assets/js/request";
-import { listTestHistory } from "graphql/queries";
+import { listTestEnvs, listTestHistory } from "graphql/queries";
 import { AUTO_REFRESH_INT } from "assets/js/const";
 import HelpPanel from "components/HelpPanel";
 import SideMenu from "components/SideMenu";
 import { useTranslation } from "react-i18next";
 import PipelineStatusComp from "./common/PipelineStatus";
 import ButtonRefresh from "components/ButtonRefresh";
-import { TestHistory } from "API";
+import { TestEnv, TestHistory } from "API";
 import { startSingleTest } from "graphql/mutations";
+import ATPSelect from "pages/testEnvs/Select";
 const PAGE_SIZE = 10;
 
 const CheckPointsHistory: React.FC = () => {
@@ -25,8 +26,8 @@ const CheckPointsHistory: React.FC = () => {
     { name: t("name"), link: "/" },
     { name: "Check Points", link: "/integration-test/checkpoints" },
     {
-      name: id ?? "",
-    },
+      name: id ?? ""
+    }
   ];
 
   const navigate = useNavigate();
@@ -39,6 +40,47 @@ const CheckPointsHistory: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [curPage, setCurPage] = useState(1);
 
+  const [envList, setEnvList] = useState<TestEnv[]>([]);
+  const [selectedEnvId, setSelectedEnvId] = useState<string>("");
+
+  const fetchEnvList = async () => {
+    try {
+      const resData: any = await appSyncRequestQuery(listTestEnvs, {
+        page: 1,
+        count: 100
+      });
+      const dataTestEnvList: TestEnv[] = [
+        { id: "", envName: "ALL" },
+        ...(resData.data.listTestEnvs?.testEnvs || [])
+      ];
+      setEnvList(dataTestEnvList);
+
+      // Check if the selected option in localStorage is still valid
+      const storedEnvId = localStorage.getItem("selectedTestEnv");
+      if (
+        storedEnvId &&
+        dataTestEnvList.some((env) => env.id === storedEnvId)
+      ) {
+        setSelectedEnvId(storedEnvId);
+      } else {
+        setSelectedEnvId("");
+        localStorage.removeItem("selectedTestEnv");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnvList();
+  }, []);
+
+  const handleEnvChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = event.target.value;
+    setSelectedEnvId(selectedValue);
+    localStorage.setItem("selectedTestEnv", selectedValue);
+  };
+
   const asyncListTestHistory = async (hideLoading = false) => {
     try {
       if (!hideLoading) {
@@ -50,6 +92,7 @@ const CheckPointsHistory: React.FC = () => {
         id: id,
         page: curPage,
         count: PAGE_SIZE,
+        testEnvId: selectedEnvId
       });
       const testHistoryList: TestHistory[] =
         resData.data.listTestHistory.testHistories;
@@ -78,7 +121,7 @@ const CheckPointsHistory: React.FC = () => {
             "parameterKey" in item! && "parameterValue" in item
               ? {
                   parameterKey: item.parameterKey,
-                  parameterValue: item.parameterValue,
+                  parameterValue: item.parameterValue
                 }
               : null
           )
@@ -86,7 +129,8 @@ const CheckPointsHistory: React.FC = () => {
 
       const resData = await appSyncRequestQuery(startSingleTest, {
         markerId: testHistory.markerId,
-        parameters: parameters,
+        testEnvId: selectedEnvId,
+        parameters: parameters
       });
 
       console.info("Retry initiated, resData:", resData);
@@ -107,7 +151,7 @@ const CheckPointsHistory: React.FC = () => {
 
   useEffect(() => {
     asyncListTestHistory();
-  }, [curPage]);
+  }, [curPage, selectedEnvId]);
 
   useEffect(() => {
     if (selectedTestHistories.length === 1) {
@@ -124,7 +168,7 @@ const CheckPointsHistory: React.FC = () => {
     }, AUTO_REFRESH_INT);
     console.info("refreshInterval:", refreshInterval);
     return () => clearInterval(refreshInterval);
-  }, [curPage]);
+  }, [curPage, selectedEnvId]);
 
   const renderHistoryId = (data: TestHistory) => {
     return (
@@ -166,7 +210,7 @@ const CheckPointsHistory: React.FC = () => {
                     id: "id",
                     header: "ID",
                     width: 220,
-                    cell: (e: TestHistory) => renderHistoryId(e),
+                    cell: (e: TestHistory) => renderHistoryId(e)
                   },
                   {
                     width: 380,
@@ -183,7 +227,7 @@ const CheckPointsHistory: React.FC = () => {
                           .join(", ");
                       }
                       return "No Parameters";
-                    },
+                    }
                   },
                   {
                     width: 150,
@@ -191,25 +235,31 @@ const CheckPointsHistory: React.FC = () => {
                     header: t("Created"),
                     cell: (e: TestHistory) => {
                       return e.createdAt;
-                    },
+                    }
                   },
                   {
                     id: "duration",
                     header: t("Duration"),
                     cell: (e: TestHistory) => {
                       return e.duration;
-                    },
+                    }
                   },
                   {
                     width: 120,
                     id: "status",
                     header: t("Status"),
-                    cell: (e: TestHistory) => renderStatus(e),
-                  },
+                    cell: (e: TestHistory) => renderStatus(e)
+                  }
                 ]}
                 items={testHistoriesList}
                 actions={
-                  <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: "8px"
+                    }}
+                  >
                     <Button
                       btnType="icon"
                       disabled={loadingData}
@@ -223,6 +273,16 @@ const CheckPointsHistory: React.FC = () => {
                     >
                       <ButtonRefresh loading={loadingData} />
                     </Button>
+                    <ATPSelect
+                      value={selectedEnvId}
+                      onChange={handleEnvChange}
+                      optionList={envList.map((env) => ({
+                        name: `Test Env: ${env.envName || ""}`,
+                        value: env.id
+                      }))}
+                      allowEmpty={true}
+                      width={140}
+                    />
                     <Button
                       disabled={disabledDetail}
                       onClick={() => {

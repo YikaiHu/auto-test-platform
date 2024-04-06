@@ -8,8 +8,16 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
-export const startSingleTest = /* GraphQL */ `mutation StartSingleTest($markerId: String!, $parameters: [ParameterInput]) {
-  startSingleTest(markerId: $markerId, parameters: $parameters)
+export const startSingleTest = /* GraphQL */ `mutation StartSingleTest(
+  $markerId: String!
+  $testEnvId: ID
+  $parameters: [ParameterInput]
+) {
+  startSingleTest(
+    markerId: $markerId
+    testEnvId: $testEnvId
+    parameters: $parameters
+  )
 }
 ` as GeneratedMutation<
   APITypes.StartSingleTestMutationVariables,

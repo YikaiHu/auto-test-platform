@@ -47,7 +47,7 @@ const SIDE_MENU_LIST = [
         link: "/integration-test/checkpoints",
       },
       {
-        name: "Clickstream Analytics on AWS",
+        name: "Clickstream Analytics on AWS (WIP)",
         link: "/integration-test/404",
       },
     ],
