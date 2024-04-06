@@ -100,7 +100,8 @@ const CheckPoints: React.FC = () => {
       }
       const resData: any = await appSyncRequestQuery(listTestCheckPoints, {
         page: curPage,
-        count: PAGE_SIZE
+        count: PAGE_SIZE,
+        testEnvId: selectedEnvId
       });
       const checkPointsList: CheckPoint[] =
         resData.data.listTestCheckPoints.checkPoints;
@@ -126,6 +127,10 @@ const CheckPoints: React.FC = () => {
   useEffect(() => {
     getCheckPointsList();
   }, [curPage]);
+
+  useEffect(() => {
+    getCheckPointsList();
+  }, [selectedEnvId]);
 
   useEffect(() => {
     console.info("selectedCheckPoints:", selectedCheckPoints);
@@ -155,7 +160,7 @@ const CheckPoints: React.FC = () => {
     }, AUTO_REFRESH_INT);
     console.info("refreshInterval:", refreshInterval);
     return () => clearInterval(refreshInterval);
-  }, [curPage]);
+  }, [curPage, selectedEnvId]);
 
   const renderCheckPointId = (data: CheckPoint) => {
     return (

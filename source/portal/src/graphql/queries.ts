@@ -32,8 +32,8 @@ export const listTestCheckPoints = /* GraphQL */ `query ListTestCheckPoints($pag
   APITypes.ListTestCheckPointsQueryVariables,
   APITypes.ListTestCheckPointsQuery
 >;
-export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $page: Int, $count: Int) {
-  listTestHistory(id: $id, page: $page, count: $count) {
+export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $page: Int, $count: Int, $testEnvId: ID) {
+  listTestHistory(id: $id, page: $page, count: $count, testEnvId: $testEnvId) {
     testHistories {
       id
       markerId
@@ -67,8 +67,8 @@ export const listTestHistory = /* GraphQL */ `query ListTestHistory($id: ID!, $p
   APITypes.ListTestHistoryQueryVariables,
   APITypes.ListTestHistoryQuery
 >;
-export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!, $testEnvId: ID) {
-  getTestHistory(id: $id, testEnvId: $testEnvId) {
+export const getTestHistory = /* GraphQL */ `query GetTestHistory($id: ID!) {
+  getTestHistory(id: $id) {
     id
     markerId
     createdAt

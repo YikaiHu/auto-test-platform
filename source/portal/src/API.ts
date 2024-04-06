@@ -155,6 +155,7 @@ export type ListTestHistoryQueryVariables = {
   id: string,
   page?: number | null,
   count?: number | null,
+  testEnvId?: string | null,
 };
 
 export type ListTestHistoryQuery = {
@@ -191,7 +192,6 @@ export type ListTestHistoryQuery = {
 
 export type GetTestHistoryQueryVariables = {
   id: string,
-  testEnvId?: string | null,
 };
 
 export type GetTestHistoryQuery = {
