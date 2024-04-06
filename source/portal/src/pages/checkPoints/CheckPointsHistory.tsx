@@ -54,6 +54,18 @@ const CheckPointsHistory: React.FC = () => {
         ...(resData.data.listTestEnvs?.testEnvs || [])
       ];
       setEnvList(dataTestEnvList);
+
+      // Check if the selected option in localStorage is still valid
+      const storedEnvId = localStorage.getItem("selectedTestEnv");
+      if (
+        storedEnvId &&
+        dataTestEnvList.some((env) => env.id === storedEnvId)
+      ) {
+        setSelectedEnvId(storedEnvId);
+      } else {
+        setSelectedEnvId("");
+        localStorage.removeItem("selectedTestEnv");
+      }
     } catch (error) {
       console.error(error);
     }
@@ -64,7 +76,9 @@ const CheckPointsHistory: React.FC = () => {
   }, []);
 
   const handleEnvChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedEnvId(event.target.value);
+    const selectedValue = event.target.value;
+    setSelectedEnvId(selectedValue);
+    localStorage.setItem("selectedTestEnv", selectedValue);
   };
 
   const asyncListTestHistory = async (hideLoading = false) => {
@@ -115,6 +129,7 @@ const CheckPointsHistory: React.FC = () => {
 
       const resData = await appSyncRequestQuery(startSingleTest, {
         markerId: testHistory.markerId,
+        testEnvId: selectedEnvId,
         parameters: parameters
       });
 

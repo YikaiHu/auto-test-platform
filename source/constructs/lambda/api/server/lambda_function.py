@@ -82,7 +82,9 @@ def list_test_checkpoints(page=1, count=20, testEnvId=None):
 
         query_params = {
             "IndexName": "sortCreatedAtIndex",
-            "KeyConditionExpression": Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{item['id']}"),
+            "KeyConditionExpression": Key("SK").eq(
+                f"{ENTITY_TYPE.MARKER.value}#{item['id']}"
+            ),
             "ScanIndexForward": False,
             "Limit": 1,
         }
@@ -107,7 +109,9 @@ def list_test_checkpoints(page=1, count=20, testEnvId=None):
 @router.route(field_name="listTestHistory")
 def list_test_history(id, page=1, count=20, testEnvId=""):
     """List test history"""
-    logger.info(f"List history from JSON file in page {page} with {count} of records for test env ID: {testEnvId}")
+    logger.info(
+        f"List history from JSON file in page {page} with {count} of records for test env ID: {testEnvId}"
+    )
 
     query_params = {
         "IndexName": "sortCreatedAtIndex",
@@ -245,6 +249,11 @@ def start_single_task(**args):
                 )
 
     parameters = args.get("parameters")
+
+    # Get test environment ID from parameters
+    test_env_id = args.get("testEnvId")
+    # TODO: abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+
     pk_id = str(uuid.uuid4())
     search_response = table.query(
         KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
@@ -301,6 +310,7 @@ def start_single_task(**args):
         "parameters": parameters_parsed,
         "status": "RUNNING",
         "codeBuildArn": codebuild_arn,
+        "testEnvId": test_env_id,
     }
 
     response = table.put_item(Item=ddb_data)

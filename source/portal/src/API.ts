@@ -96,6 +96,7 @@ export type TestEnv = {
 
 export type StartSingleTestMutationVariables = {
   markerId: string,
+  testEnvId?: string | null,
   parameters?: Array< ParameterInput | null > | null,
 };
 
