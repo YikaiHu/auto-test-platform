@@ -227,32 +227,41 @@ def start_single_task(**args):
     logger.info(f"Starting task with args: {args}")
     marker_id = args.get("markerId")
     # check if there is running deamonset case
-    search_deamonset = table.query(
-        IndexName="sortCreatedAtIndex",
-        KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}"),
-        ScanIndexForward=False,
-    )
+    if marker_id == 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11b':
+        search_deamonset = table.query(
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}"),
+            ScanIndexForward=False,
+        )
 
-    half_hour_ago = datetime.utcnow() - timedelta(minutes=30)
-    items = search_deamonset.get("Items", [])
-    if items:
-        for item in items:
-            status = item.get("status", "")
-            operate_time = item.get("createdAt", "")
-            timestamp = datetime.strptime(operate_time, "%Y-%m-%dT%H:%M:%SZ")
-            timestamp_dt = datetime.fromtimestamp(timestamp.timestamp())
+        half_hour_ago = datetime.utcnow() - timedelta(minutes=30)
+        items = search_deamonset.get("Items", [])
+        if items:
+            for item in items:
+                status = item.get("status", "")
+                operate_time = item.get("createdAt", "")
+                timestamp = datetime.strptime(operate_time, "%Y-%m-%dT%H:%M:%SZ")
+                timestamp_dt = datetime.fromtimestamp(timestamp.timestamp())
 
-            if status == "RUNNING" and timestamp_dt > half_hour_ago:
-                raise APIException(
-                    ErrorCode.UNKNOWN_ERROR,
-                    "Deamonset case is running. Please wait for finishing and start again!",
-                )
-
+                if status == "RUNNING" and timestamp_dt > half_hour_ago:
+                    raise APIException(
+                        ErrorCode.UNKNOWN_ERROR,
+                        "Deamonset case is running. Please wait for finishing and start again!",
+                    )
     parameters = args.get("parameters")
 
     # Get test environment ID from parameters
     test_env_id = args.get("testEnvId")
-    # TODO: abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+    # abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+    env_response = table.query(
+        KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{test_env_id}")
+    )
+    items = env_response.get("Items", [])
+    region = ""
+    if items:
+        item = items[0]
+        region = item.get("region", "")
+        stack_name = item.get("stackName", "")
 
     pk_id = str(uuid.uuid4())
     search_response = table.query(
@@ -267,7 +276,7 @@ def start_single_task(**args):
     codebuild_params_list = pass_parameters_to_codebuild(parameters, project_name)
     codecommit_repo = metadata_json[project_name]["codecommit_repo"]
     branch = metadata_json[project_name]["branch"]
-    region = metadata_json[project_name]["region"]
+    # region = metadata_json[project_name]["region"]
     parameters_parsed = []
     environment_variables = [
         {"name": "code_commit_repo", "value": codecommit_repo},
@@ -278,6 +287,7 @@ def start_single_task(**args):
         {"name": "project_name", "value": project_name},
         {"name": "pk", "value": f"{ENTITY_TYPE.TEST.value}#{pk_id}"},
         {"name": "sk", "value": f"{ENTITY_TYPE.MARKER.value}#{marker_id}"},
+        {"name": "stack_name", "value": stack_name},
     ]
 
     update_environment_variables(codebuild_project, environment_variables)
@@ -322,7 +332,6 @@ def start_single_task(**args):
         print("Failed to write data to DDB.")
         return None
 
-
 @router.route(field_name="importTestEnv")
 def import_env(**args):
     """import test env"""
@@ -337,6 +346,7 @@ def import_env(**args):
     hash_input = f"{account_id}{region}{stack_name}".encode("utf-8")
     hash_result = hashlib.sha256(hash_input).hexdigest()
     env_id = str(uuid.UUID(hash_result[:32]))
+    # TODO: create sns topic and write into ddb
     # create subscription
     response = sns.subscribe(TopicArn=sns_topic_arn, Protocol="email", Endpoint=email)
     subscription_arn = response["SubscriptionArn"]
