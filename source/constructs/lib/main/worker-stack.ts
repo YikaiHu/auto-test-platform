@@ -65,7 +65,7 @@ export class WorkerStack extends Construct {
             build: {
               commands: [
                 'echo \"start tests\"', // Your build commands go here
-                'sh start_test_autotest_platform.sh \"$mark\" \"$parameter\" \"$region\"'
+                'sh start_test_autotest_platform.sh \"$mark\" \"$parameter\" \"$region\" \"$stack_name\"'
               ],
             },
             post_build: {

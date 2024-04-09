@@ -226,15 +226,30 @@ def start_single_task(**args):
     """Start single test task"""
     logger.info(f"Starting task with args: {args}")
     marker_id = args.get("markerId")
+    daemonset_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11b'
+    sidecar_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11c'
     # check if there is running deamonset case
-    search_deamonset = table.query(
-        IndexName="sortCreatedAtIndex",
-        KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}"),
-        ScanIndexForward=False,
-    )
+    if marker_id == daemonset_marker_id:
+        search_deamonset = table.query(
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{daemonset_marker_id}"),
+            ScanIndexForward=False,
+        )
+        search_sidecar = table.query(
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{sidecar_marker_id}"),
+            ScanIndexForward=False,
+        )
+        items = search_deamonset.get("Items", []) + search_sidecar.get("Items", [])
+    if marker_id == sidecar_marker_id:
+        search_deamonset = table.query(
+            IndexName="sortCreatedAtIndex",
+            KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{daemonset_marker_id}"),
+            ScanIndexForward=False,
+        )
+        items = search_deamonset.get("Items", [])
 
-    half_hour_ago = datetime.utcnow() - timedelta(minutes=30)
-    items = search_deamonset.get("Items", [])
+    half_hour_ago = datetime.utcnow() - timedelta(minutes=40)
     if items:
         for item in items:
             status = item.get("status", "")
@@ -245,14 +260,24 @@ def start_single_task(**args):
             if status == "RUNNING" and timestamp_dt > half_hour_ago:
                 raise APIException(
                     ErrorCode.UNKNOWN_ERROR,
-                    "Deamonset case is running. Please wait for finishing and start again!",
+                    "One EKS case is running. Please wait for finishing and start again!",
                 )
-
     parameters = args.get("parameters")
 
     # Get test environment ID from parameters
     test_env_id = args.get("testEnvId")
-    # TODO: abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+    # abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
+    env_response = table.query(
+        KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{test_env_id}")
+    )
+    items = env_response.get("Items", [])
+    region = ""
+    if items:
+        item = items[0]
+        region = item.get("region", "")
+        stack_name = item.get("stackName", "")
+        account_id = item.get("accountId", "")
+
 
     pk_id = str(uuid.uuid4())
     search_response = table.query(
@@ -267,7 +292,6 @@ def start_single_task(**args):
     codebuild_params_list = pass_parameters_to_codebuild(parameters, project_name)
     codecommit_repo = metadata_json[project_name]["codecommit_repo"]
     branch = metadata_json[project_name]["branch"]
-    region = metadata_json[project_name]["region"]
     parameters_parsed = []
     environment_variables = [
         {"name": "code_commit_repo", "value": codecommit_repo},
@@ -278,6 +302,7 @@ def start_single_task(**args):
         {"name": "project_name", "value": project_name},
         {"name": "pk", "value": f"{ENTITY_TYPE.TEST.value}#{pk_id}"},
         {"name": "sk", "value": f"{ENTITY_TYPE.MARKER.value}#{marker_id}"},
+        {"name": "stack_name", "value": stack_name},
     ]
 
     update_environment_variables(codebuild_project, environment_variables)
@@ -285,7 +310,6 @@ def start_single_task(**args):
     codebuild_arn = start_build_response["build"]["arn"]
 
     print("CodeBuild triggered:", start_build_response)
-
     if parameters:
         for param in parameters:
             parameter_key = param.get("parameterKey")
@@ -303,9 +327,9 @@ def start_single_task(**args):
         "updatedAt": current_timestamp,
         "duration": "-",
         "metaData": {
-            "accountId": "691546483958",
-            "region": "ap-northeast-1",
-            "stackName": "clo-auto-test",
+            "accountId": account_id,
+            "region": region,
+            "stackName": stack_name,
         },
         "parameters": parameters_parsed,
         "status": "RUNNING",
@@ -322,7 +346,6 @@ def start_single_task(**args):
         print("Failed to write data to DDB.")
         return None
 
-
 @router.route(field_name="importTestEnv")
 def import_env(**args):
     """import test env"""
@@ -337,8 +360,11 @@ def import_env(**args):
     hash_input = f"{account_id}{region}{stack_name}".encode("utf-8")
     hash_result = hashlib.sha256(hash_input).hexdigest()
     env_id = str(uuid.UUID(hash_result[:32]))
+    # Create sns topic and write into ddb
+    response_sns = sns.create_topic(Name=f'AutoTestPlat{env_id}')
+    topic_arn = response_sns['TopicArn']
     # create subscription
-    response = sns.subscribe(TopicArn=sns_topic_arn, Protocol="email", Endpoint=email)
+    response = sns.subscribe(TopicArn=topic_arn, Protocol="email", Endpoint=email)
     subscription_arn = response["SubscriptionArn"]
     current_timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     ddb_data = {
@@ -349,6 +375,7 @@ def import_env(**args):
         "region": region,
         "accountId": account_id,
         "alarmEmail": email,
+        "topicArn": topic_arn,
         "subscriptionArn": subscription_arn,
         "createdAt": current_timestamp,
     }
