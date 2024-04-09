@@ -6,6 +6,7 @@ import os
 import json
 import boto3
 from datetime import datetime
+from enum import Enum
 
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
@@ -14,9 +15,15 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 ddb_table_name = os.environ["TABLE"]
-sns_topic_arn = os.environ["SNS_TOPIC_ARN"]
+# sns_topic_arn = os.environ["SNS_TOPIC_ARN"]
 ddb_table = dynamodb.Table(ddb_table_name)
 
+
+class ENTITY_TYPE(Enum):
+    MARKER = "MARKER"
+    PROJECT = "PROJECT"
+    TEST = "TEST"
+    TEST_ENV = "TEST_ENV"
 
 def lambda_handler(event, context):
     for record in event["Records"]:
@@ -59,6 +66,9 @@ def lambda_handler(event, context):
                 ReturnValues='ALL_NEW'  
             )
             print(response['Attributes'])
+
+            # send report email 
+
         except Exception as e:
             print(f"Error: {str(e)}")
 
@@ -103,4 +113,53 @@ def parse_test_result(parsed_data):
     ddb_data['result'] = results
     return ddb_data
     
+
+def send_email_report(test_pk):
+    subject = "Test Result from Auto Test Platform"
+    print(f'send emaim report: {test_pk}')
+    # get marker and env
+    response = table.query(
+            KeyConditionExpression=Key("PK").eq(test_pk)
+        )
+    items = response.get("Items", [])
+    if items:
+        item = items[0]
+        marker_id = item.get("SK", "")
+        env_id = item.get("testEnvId", "")
+        result = item.get("status", "")
+        parameters = item.get("parameters", "")
+        trace = item.get("result", "")
+    # get project and module according to marker
+    search_marker = table.query(
+            KeyConditionExpression=Key("PK").eq(marker_id),
+        )
+    items = search_marker.get("Items", [])
+    if items:
+        item = items[0]
+        project_name = item.get("projectName", "")
+        model_name = item.get("modelName", "")
+
+    # get topic arn according to env id
+    search_env = table.query(
+            KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{env_id}"),
+        )
+    items = search_env.get("Items", [])
+    if items:
+        item = items[0]
+        topic_arn = item.get("topicArn", "")
+    
+    if "FAILED" in result:
+        result = "❌ FAILED"
+    else:
+        result = "✅ PASS"
+    
+    text_body = f""" Project: {project_name} \n Model: {model_name}\n Test Parameters: {parameters}\n """ + f"""Result: {result}\n """ + f"""Trace: {trace}"""
+    response = sns.publish(
+        TopicArn= topic_arn,
+        Message=text_body,
+        Subject=subject,
+        MessageStructure='text/html'
+    )
+    print(response)
+
 
