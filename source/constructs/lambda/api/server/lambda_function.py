@@ -278,7 +278,6 @@ def start_single_task(**args):
         stack_name = item.get("stackName", "")
         account_id = item.get("accountId", "")
 
-
     pk_id = str(uuid.uuid4())
     search_response = table.query(
         KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.MARKER.value}#{marker_id}")
