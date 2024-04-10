@@ -7,6 +7,7 @@ import json
 import boto3
 from datetime import datetime
 from enum import Enum
+from boto3.dynamodb.conditions import Attr, Key
 
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
@@ -68,6 +69,7 @@ def lambda_handler(event, context):
             print(response['Attributes'])
 
             # send report email 
+            send_email_report(pk)
 
         except Exception as e:
             print(f"Error: {str(e)}")
@@ -116,10 +118,10 @@ def parse_test_result(parsed_data):
 
 def send_email_report(test_pk):
     subject = "Test Result from Auto Test Platform"
-    print(f'send emaim report: {test_pk}')
+    print(f'send email report: {test_pk}')
     # get marker and env
-    response = table.query(
-            KeyConditionExpression=Key("PK").eq(test_pk)
+    response = ddb_table.query(
+            KeyConditionExpressionf=Key("PK").eq(test_pk)
         )
     items = response.get("Items", [])
     if items:
@@ -130,7 +132,7 @@ def send_email_report(test_pk):
         parameters = item.get("parameters", "")
         trace = item.get("result", "")
     # get project and module according to marker
-    search_marker = table.query(
+    search_marker = ddb_table.query(
             KeyConditionExpression=Key("PK").eq(marker_id),
         )
     items = search_marker.get("Items", [])
@@ -140,7 +142,7 @@ def send_email_report(test_pk):
         model_name = item.get("modelName", "")
 
     # get topic arn according to env id
-    search_env = table.query(
+    search_env = ddb_table.query(
             KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{env_id}"),
         )
     items = search_env.get("Items", [])

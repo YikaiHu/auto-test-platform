@@ -237,6 +237,7 @@ def start_single_task(**args):
     daemonset_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11b'
     sidecar_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11c'
     # check if there is running deamonset case
+    items = []
     if marker_id == daemonset_marker_id:
         search_deamonset = table.query(
             IndexName="sortCreatedAtIndex",
@@ -285,7 +286,6 @@ def start_single_task(**args):
         region = item.get("region", "")
         stack_name = item.get("stackName", "")
         account_id = item.get("accountId", "")
-
 
     pk_id = str(uuid.uuid4())
     search_response = table.query(
