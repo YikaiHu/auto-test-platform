@@ -86,12 +86,20 @@ def list_test_checkpoints(page=1, count=20, testEnvId=None):
                 f"{ENTITY_TYPE.MARKER.value}#{item['id']}"
             ),
             "ScanIndexForward": False,
-            "Limit": 1,
         }
         # Filter by testEnvId if provided, this is for old data that doesn't have testEnvId
+        history_responses = []
         if testEnvId:
             query_params["FilterExpression"] = Attr("testEnvId").eq(testEnvId)
-        history_response = table.query(**query_params)
+        while True:
+            history_response = table.query(**query_params)
+            history_responses.extend(history_response.get("Items", []))
+
+            # Use LastEvaluatedKey for pagination if it exists
+            if "LastEvaluatedKey" in history_response:
+                query_params["ExclusiveStartKey"] = history_response["LastEvaluatedKey"]
+            else:
+                break
 
         latest_test = history_response.get("Items", [])
         if latest_test:
