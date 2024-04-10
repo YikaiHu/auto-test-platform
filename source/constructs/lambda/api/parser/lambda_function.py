@@ -7,6 +7,7 @@ import json
 import boto3
 from datetime import datetime
 from enum import Enum
+from boto3.dynamodb.conditions import Attr, Key
 
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
@@ -117,10 +118,10 @@ def parse_test_result(parsed_data):
 
 def send_email_report(test_pk):
     subject = "Test Result from Auto Test Platform"
-    print(f'send emaim report: {test_pk}')
+    print(f'send email report: {test_pk}')
     # get marker and env
     response = ddb_table.query(
-            KeyConditionExpression=Key("PK").eq(test_pk)
+            KeyConditionExpressionf=Key("PK").eq(test_pk)
         )
     items = response.get("Items", [])
     if items:
