@@ -236,17 +236,21 @@ def start_single_task(**args):
     marker_id = args.get("markerId")
     daemonset_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11b'
     sidecar_marker_id = 'b0b91a6c-36bf-462d-ae92-3fbcb8e0d11c'
+    # Get test environment ID from parameters
+    test_env_id = args.get("testEnvId")
     # check if there is running deamonset case
     items = []
     if marker_id == daemonset_marker_id:
         search_deamonset = table.query(
             IndexName="sortCreatedAtIndex",
             KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{daemonset_marker_id}"),
+            FilterExpression=Attr("testEnvId").eq(f"{test_env_id}"),
             ScanIndexForward=False,
         )
         search_sidecar = table.query(
             IndexName="sortCreatedAtIndex",
             KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{sidecar_marker_id}"),
+            FilterExpression=Attr("testEnvId").eq(f"{test_env_id}"),
             ScanIndexForward=False,
         )
         items = search_deamonset.get("Items", []) + search_sidecar.get("Items", [])
@@ -254,6 +258,7 @@ def start_single_task(**args):
         search_deamonset = table.query(
             IndexName="sortCreatedAtIndex",
             KeyConditionExpression=Key("SK").eq(f"{ENTITY_TYPE.MARKER.value}#{daemonset_marker_id}"),
+            FilterExpression=Attr("testEnvId").eq(f"{test_env_id}"),
             ScanIndexForward=False,
         )
         items = search_deamonset.get("Items", [])
@@ -272,9 +277,6 @@ def start_single_task(**args):
                     "One EKS case is running. Please wait for finishing and start again!",
                 )
     parameters = args.get("parameters")
-
-    # Get test environment ID from parameters
-    test_env_id = args.get("testEnvId")
     # abstract this to a function, and get the test env detail from DDB, such as region, account_id, stack name etc.
     env_response = table.query(
         KeyConditionExpression=Key("PK").eq(f"{ENTITY_TYPE.TEST_ENV.value}#{test_env_id}")
