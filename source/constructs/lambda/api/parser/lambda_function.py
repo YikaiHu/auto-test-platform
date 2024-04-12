@@ -10,6 +10,7 @@ from enum import Enum
 from boto3.dynamodb.conditions import Attr, Key
 
 s3 = boto3.client("s3")
+sns = boto3.client('sns')
 dynamodb = boto3.resource("dynamodb")
 
 logger = logging.getLogger()
@@ -121,7 +122,7 @@ def send_email_report(test_pk):
     print(f'send email report: {test_pk}')
     # get marker and env
     response = ddb_table.query(
-            KeyConditionExpressionf=Key("PK").eq(test_pk)
+            KeyConditionExpression=Key("PK").eq(test_pk)
         )
     items = response.get("Items", [])
     if items:
